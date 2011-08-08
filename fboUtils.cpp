@@ -1,51 +1,154 @@
 #include "fboUtils.h"
 
+
+///////////////////////////////////////////////////////////////////////////////
+// To be called by GL init function
+///////////////////////////////////////////////////////////////////////////////
+void initFBO(int ImWidth, int ImHeight, GLuint& colorTextureId, GLuint& depthTextureId, GLuint& fboId)
+{
+ 
+  // Texture object for colors
+  glGenTextures(1, &colorTextureId);
+  glBindTexture(GL_TEXTURE_2D, colorTextureId);
+
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, ImWidth, ImHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+
+  // Texture object for depth
+  glGenTextures(1, &depthTextureId);
+  glBindTexture(GL_TEXTURE_2D, depthTextureId);
+  
+  glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, ImWidth, ImHeight, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
+  
+
+  // get OpenGL info
+  glInfo glInfo;
+  glInfo.getInfo();
+  // glInfo.printSelf();
+
+  if(glInfo.isExtensionSupported("GL_EXT_framebuffer_object"))
+    {
+      std::cout << "Video card supports GL_EXT_framebuffer_object." << std::endl;
+    }
+  else
+    {
+      std::cout << "Video card does NOT support GL_EXT_framebuffer_object." << std::endl;
+
+      return;
+    }
+
+
+  // create a framebuffer object, you need to delete them when program exits.
+  glGenFramebuffersEXT(1, &fboId);
+  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboId);
+
+  // attach a texture to FBO color attachement point
+  glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, colorTextureId, 0);
+
+  // attach depth texture
+  glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, depthTextureId, 0);
+
+  // Chekc if frame buffer is correctly setup
+  checkFramebufferStatus();
+
+  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+ 
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// To be called by GL clean up function
+///////////////////////////////////////////////////////////////////////////////
+void clearFBO(GLuint& colorTextureId, GLuint& depthTextureId, GLuint& fboId)
+{
+  glDeleteTextures(1, &colorTextureId);
+  glDeleteTextures(1, &depthTextureId);
+
+  glDeleteFramebuffersEXT(1, &fboId);
+}
+
+
+//=============================================================================
+// To be called by GL dispaly function
+//=============================================================================
+
+void render2FBO(GLuint fboId)
+{
+  // set the rendering destination to FBO
+  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboId);
+}
+
+
+void unbindFBO()
+{
+  // back to normal window-system-provided framebuffer
+  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // display info messages
 ///////////////////////////////////////////////////////////////////////////////
-void showInfo()
-{
-  // backup current model-view matrix
-  glPushMatrix();                     // save current modelview matrix
-  glLoadIdentity();                   // reset modelview matrix
+// void showInfo()
+// {
+//   // backup current model-view matrix
+//   glPushMatrix();                     // save current modelview matrix
+//   glLoadIdentity();                   // reset modelview matrix
 
-  // set to 2D orthogonal projection
-  glMatrixMode(GL_PROJECTION);        // switch to projection matrix
-  glPushMatrix();                     // save current projection matrix
-  glLoadIdentity();                   // reset projection matrix
-  gluOrtho2D(0, screenWidth, 0, screenHeight);  // set to orthogonal projection
+//   // set to 2D orthogonal projection
+//   glMatrixMode(GL_PROJECTION);        // switch to projection matrix
+//   glPushMatrix();                     // save current projection matrix
+//   glLoadIdentity();                   // reset projection matrix
+//   gluOrtho2D(0, screenWidth, 0, screenHeight);  // set to orthogonal projection
 
-  const int FONT_HEIGHT = 14;
-  float color[4] = {1, 1, 1, 1};
+//   const int FONT_HEIGHT = 14;
+//   float color[4] = {1, 1, 1, 1};
 
-  std::stringstream ss;
-  ss << "FBO: ";
-  if(fboUsed)
-    ss << "on" << ends;
-  else
-    ss << "off" << ends;
+//   std::stringstream ss;
+//   ss << "FBO: ";
+//   if(fboUsed)
+//     ss << "on" << ends;
+//   else
+//     ss << "off" << ends;
 
-  drawString(ss.str().c_str(), 1, screenHeight-FONT_HEIGHT, color, font);
-  ss.str(""); // clear buffer
+//   drawString(ss.str().c_str(), 1, screenHeight-FONT_HEIGHT, color, font);
+//   ss.str(""); // clear buffer
 
-  ss << std::fixed << std::setprecision(3);
-  ss << "Render-To-Texture Time: " << renderToTextureTime << " ms" << ends;
-  drawString(ss.str().c_str(), 1, screenHeight-(2*FONT_HEIGHT), color, font);
-  ss.str("");
+//   ss << std::fixed << std::setprecision(3);
+//   ss << "Render-To-Texture Time: " << renderToTextureTime << " ms" << ends;
+//   drawString(ss.str().c_str(), 1, screenHeight-(2*FONT_HEIGHT), color, font);
+//   ss.str("");
 
-  ss << "Press SPACE to toggle FBO." << ends;
-  drawString(ss.str().c_str(), 1, 1, color, font);
+//   ss << "Press SPACE to toggle FBO." << ends;
+//   drawString(ss.str().c_str(), 1, 1, color, font);
 
-  // unset floating format
-  ss << std::resetiosflags(std::ios_base::fixed | std::ios_base::floatfield);
+//   // unset floating format
+//   ss << std::resetiosflags(std::ios_base::fixed | std::ios_base::floatfield);
 
-  // restore projection matrix
-  glPopMatrix();                   // restore to previous projection matrix
+//   // restore projection matrix
+//   glPopMatrix();                   // restore to previous projection matrix
 
-  // restore modelview matrix
-  glMatrixMode(GL_MODELVIEW);      // switch to modelview matrix
-  glPopMatrix();                   // restore to previous modelview matrix
-}
+//   // restore modelview matrix
+//   glMatrixMode(GL_MODELVIEW);      // switch to modelview matrix
+//   glPopMatrix();                   // restore to previous modelview matrix
+// }
 
 
 
@@ -103,12 +206,12 @@ bool checkFramebufferStatus()
 ///////////////////////////////////////////////////////////////////////////////
 void printFramebufferInfo()
 {
-  cout << "\n***** FBO STATUS *****\n";
+  std::cout << "\n***** FBO STATUS *****\n";
 
   // print max # of colorbuffers supported by FBO
   int colorBufferCount = 0;
   glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS_EXT, &colorBufferCount);
-  cout << "Max Number of Color Buffer Attachment Points: " << colorBufferCount << endl;
+  std::cout << "Max Number of Color Buffer Attachment Points: " << colorBufferCount << std::endl;
 
   int objectType;
   int objectId;
@@ -129,11 +232,11 @@ void printFramebufferInfo()
 
 	  std::string formatName;
 
-	  cout << "Color Attachment " << i << ": ";
+	  std::cout << "Color Attachment " << i << ": ";
 	  if(objectType == GL_TEXTURE)
-	    cout << "GL_TEXTURE, " << getTextureParameters(objectId) << endl;
+	    std::cout << "GL_TEXTURE, " << getTextureParameters(objectId) << std::endl;
 	  else if(objectType == GL_RENDERBUFFER_EXT)
-	    cout << "GL_RENDERBUFFER_EXT, " << getRenderbufferParameters(objectId) << endl;
+	    std::cout << "GL_RENDERBUFFER_EXT, " << getRenderbufferParameters(objectId) << std::endl;
         }
     }
 
@@ -149,14 +252,14 @@ void printFramebufferInfo()
 					       GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME_EXT,
 					       &objectId);
 
-      cout << "Depth Attachment: ";
+      std::cout << "Depth Attachment: ";
       switch(objectType)
         {
         case GL_TEXTURE:
-	  cout << "GL_TEXTURE, " << getTextureParameters(objectId) << endl;
+	  std::cout << "GL_TEXTURE, " << getTextureParameters(objectId) << std::endl;
 	  break;
         case GL_RENDERBUFFER_EXT:
-	  cout << "GL_RENDERBUFFER_EXT, " << getRenderbufferParameters(objectId) << endl;
+	  std::cout << "GL_RENDERBUFFER_EXT, " << getRenderbufferParameters(objectId) << std::endl;
 	  break;
         }
     }
@@ -173,19 +276,19 @@ void printFramebufferInfo()
 					       GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME_EXT,
 					       &objectId);
 
-      cout << "Stencil Attachment: ";
+      std::cout << "Stencil Attachment: ";
       switch(objectType)
         {
         case GL_TEXTURE:
-	  cout << "GL_TEXTURE, " << getTextureParameters(objectId) << endl;
+	  std::cout << "GL_TEXTURE, " << getTextureParameters(objectId) << std::endl;
 	  break;
         case GL_RENDERBUFFER_EXT:
-	  cout << "GL_RENDERBUFFER_EXT, " << getRenderbufferParameters(objectId) << endl;
+	  std::cout << "GL_RENDERBUFFER_EXT, " << getRenderbufferParameters(objectId) << std::endl;
 	  break;
         }
     }
 
-  cout << endl;
+  std::cout << std::endl;
 }
 
 

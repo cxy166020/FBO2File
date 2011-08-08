@@ -1,7 +1,7 @@
 CC = g++
 #CFLAGS = -c
 CFLAGS = -Wall -c -O2
-LDFLAGS = -lglut -lGL -lGLU -lX11 -lXmu -lXi -lm
+LDFLAGS = -lglut -lGL -lGLU #-lX11 -lXmu -lXi -lm
 
 
 PROG = game
@@ -11,9 +11,11 @@ CMD2 = md2.h md2.cpp
 CPCX = pcx.h pcx.cpp
 TEXU = texture.h texture.cpp
 CTGX = tga.h tga.cpp
+FBOU = fboUtils.h fboUtils.cpp
+GINF = glInfo.h glInfo.cpp
 
 
-OBJS =  bmp.o md2.o pcx.o texture.o tga.o glutmain.o
+OBJS =  bmp.o md2.o pcx.o texture.o tga.o glutmain.o fboUtils.o glInfo.o
 
 $(PROG) : $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $(PROG)
@@ -32,6 +34,12 @@ pcx.o : $(CPCX)
 	$(CC) $(CFLAGS) $^
 
 texture.o : $(TEXU)
+	$(CC) $(CFLAGS) $^
+
+fboUtils.o : $(FBOU)
+	$(CC) $(CFLAGS) $^
+
+glInfo.o : $(GINF)
 	$(CC) $(CFLAGS) $^
 
 clean :

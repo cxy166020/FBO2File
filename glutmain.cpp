@@ -1,18 +1,29 @@
+#define GL_GLEXT_PROTOTYPES
+
+#ifdef __APPLE__
+#include <GLUT/glut.h>
+#else
 #include <GL/glut.h>
+#include <GL/glext.h>
+#endif
+
 #include <iostream>
 #include <string>
 #include <iomanip>
 #include <cmath>
+#include <cstdlib>
 
 #include "texture.h"
 #include "timer.h"
 #include "md2.h"
-// #include "CImage.h"
 
-#define MAX_X 100
+
+#include "fboUtils.h"
+
+#define MAX_X  100
 #define MIN_X -100
 
-#define MAX_Z 100
+#define MAX_Z  100
 #define MIN_Z -100
 
 #ifdef PI
@@ -21,28 +32,16 @@
 
 #define PI 3.14159265
 
-// #define     FLOOR_HEIGHT     -10
-
-// #define     InitKnightX       0
-// #define     InitKnightY       0
-// #define     InitKnightZ      -50
-
 using namespace std;
 
-/////////////////////////////////////////////////
 CMD2Model Ogro;
 CMD2Model Weapon;
 
-// CMD2Model Knight;
-// CMD2Model Knight_Weapon;
-
-bool  bTextured	 = true;
-bool  bLighGL    = false;
 bool  bAnimated	 = true;
 float angle      = 0.0;
 extern float g_angle;
 
-// GLuint texName;
+GLuint colorTextureId, depthTextureId, fboId;
 
 // Terrain vector (In world coordinate system)
 float tx, ty, tz;
@@ -59,6 +58,17 @@ float px, py, pz;
 // Focal length (In pixels)
 float cf;
 /////////////////////////////////////////////////
+
+
+// Clean up FBO memory
+void clearFBO()
+{
+  glDeleteTextures(1, &colorTextureId);
+  glDeleteTextures(1, &depthTextureId);
+
+  glDeleteFramebuffersEXT(1, &fboId);
+}
+
 
 // Calculate cross product
 // c = a x b
@@ -107,9 +117,6 @@ void Model2World()
   //  - x2 -      -- cos(x2x1) cos(x2y1) cos(x2z1) --   - x1 -
   //  | y2 |   =  |  cos(y2x1) cos(y2y1) cos(y2z1)  | * | y1 |
   //  - z2 -      |- cos(z2x1) cos(z2y1) cos(z2z1) -|   - z1 -
-  // cout << xWorld[0] << " " << xWorld[1] << " " << xWorld[2] << endl;
-  // cout << yWorld[0] << " " << yWorld[1] << " " << yWorld[2] << endl;
-  // cout << zWorld[0] << " " << zWorld[1] << " " << zWorld[2] << endl;
 
   float m[16];
 
@@ -133,9 +140,6 @@ void Model2World()
   m[11] = 0;
   m[15] = 1;
 
-  // for(int i=0; i<16; i++)
-  //   cout << m[i] << " ";
-
   cout << endl;
 
   glMatrixMode( GL_MODELVIEW );
@@ -152,12 +156,9 @@ void Model2World()
 
 void Display( void )
 {
-  // Ogro.Automatic(Knight.GetX(), Knight.GetY(), Knight.GetZ());
-  // Weapon.Automatic(Knight.GetX(), Knight.GetY(), Knight.GetZ());
-	
-  //Knight.Automatic(10.0, -10.0, 10.0, -10.0, 10.0, -10.0, 10.0, 0.0, -9.5);
-  //Knight_Weapon.Automatic(10.0, -10.0, 10.0, -10.0, 10.0, -10.0, 10.0, 0.0, -9.5);
-	
+  // Rendre to FBO
+  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboId);	
+  
   // clear color and depth buffer
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   glLoadIdentity();
@@ -183,42 +184,16 @@ void Display( void )
     angle -= 360.0;
 
 
-  //glTranslatef( 0.0, 0.0, 25.0 );
   // Respond to left and right key strokes
   glRotatef( angle, 0.0, 1.0, 0.0 );
 
   // draw models
   Ogro.DrawModel( bAnimated ? timesec : 0.0 );
   Weapon.DrawModel( bAnimated ? timesec : 0.0 );
-	
-  // Knight.DrawModel( bAnimated ? timesec : 0.0 );
-  // Knight_Weapon.DrawModel( bAnimated ? timesec : 0.0 );
-	
-  // Draw floor
-  // glEnable(GL_TEXTURE_2D);
-  // glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  // glBindTexture(GL_TEXTURE_2D, texName);
-	
-  // glColor3f(1.0, 1.0, 1.0);
-  // glBegin(GL_QUADS);
-	
-  // glTexCoord2f(0.0, 0.0);
-  // glVertex3f(MIN_X, FLOOR_HEIGHT, MIN_Z);
-	
-  // glTexCoord2f(0.0, 1.0);
-  // glVertex3f(MIN_X, FLOOR_HEIGHT, MAX_Z);
-	
-  // glTexCoord2f(1.0, 1.0);
-  // glVertex3f(MAX_X, FLOOR_HEIGHT, MAX_Z);
-	
-  // glTexCoord2f(1.0, 0.0);
-  // glVertex3f(MAX_X, FLOOR_HEIGHT, MIN_Z);
-	
-  // glEnd();
-	
-  //glDisable(GL_TEXTURE_2D);
 
-
+  // back to normal window-system-provided framebuffer
+  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+  
   // swap buffers and redisplay the scene
   glutSwapBuffers();
   glutPostRedisplay();
@@ -261,7 +236,7 @@ void Reshape( int width, int height )
 // Init() - setup opengl.
 // --------------------------------------------------
 
-void Init( void )
+void Init( int width, int height )
 {
   // color used to clear the window
   glClearColor( 0.0, 0.0, 0.0, 0.0 );
@@ -275,6 +250,13 @@ void Init( void )
   // enable texture mapping
   glEnable( GL_TEXTURE_2D );
 
+  glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+  // Remeber to set clear depth value !!!
+  // glClearDepth(1.0f);
+
+  initFBO(width, height, colorTextureId, depthTextureId, fboId);
+
   /////////////////////////////////////////////
 
   CTimer::GetInstance()->Initialize();
@@ -285,24 +267,12 @@ void Init( void )
   Ogro.LoadSkin( "models/igdosh.pcx" );
   Ogro.ScaleModel( 0.25 );
 	
-  // Knight.LoadModel("models/knight.md2");
-  // Knight.LoadSkin("models/knight_white.tga" );
-  // Knight.ScaleModel(0.25);
 
   // load and initialize Ogros' weapon model
   Weapon.LoadModel( "models/Weapon.md2" );
   Weapon.LoadSkin( "models/Weapon.pcx" );
   Weapon.ScaleModel( 0.25 );
 	
-  // Knight_Weapon.LoadModel("models/weapon_knight.md2");
-  // Knight_Weapon.LoadSkin("models/weapon_knight.tga");
-  // Knight_Weapon.ScaleModel(0.25);
-	
-  // Set Knight Initial Position
-  // Knight.SetPosition(InitKnightX, InitKnightY, InitKnightZ);
-  // Knight_Weapon.SetPosition(InitKnightX, InitKnightY, InitKnightZ);
-
-  /////////////////////////////////////////////
 
   // opengl lighting initialization
   glDisable( GL_LIGHTING );
@@ -314,20 +284,6 @@ void Init( void )
   glLightfv( GL_LIGHT0, GL_POSITION, lightpos );
   glLightfv( GL_LIGHT0, GL_DIFFUSE, lightcolor );
   glLightfv( GL_LIGHT0, GL_SPECULAR, lightcolor );
-	
-  // CImage floor;
-  // floor.SetFileName("models/floor.ppm");
-  // floor.ReadPPM();
-	
-  // glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  // glGenTextures(1, &texName);
-  // glBindTexture(GL_TEXTURE_2D, texName);
-	
-  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  // glTexImage2D(GL_TEXTURE_2D, 0, 3, floor.width, floor.height, 0, GL_RGB,GL_UNSIGNED_BYTE, floor.ImageData);
 }
 
 
@@ -408,8 +364,12 @@ int main( int argc, char *argv[] )
   glutInit( &argc, argv );
   glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
 
+  // Those number need to be user input
+  int window_width  = 640;
+  int window_height = 480;
+
   // initialize window size
-  glutInitWindowSize( 640, 480 );
+  glutInitWindowSize( window_width, window_height );
 
   // initialize window position
   glutInitWindowPosition( 100, 100 );
@@ -418,7 +378,10 @@ int main( int argc, char *argv[] )
   glutCreateWindow( "Quake2's MD2 Model Loader" );
 
   // setup opengl
-  Init();
+  Init( window_width, window_height );
+
+  // Clean up functions
+  atexit(clearFBO);
 
   // callback functions
   glutSpecialFunc( Special );
