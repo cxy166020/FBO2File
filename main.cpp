@@ -25,47 +25,10 @@ using std::endl;
 using std::ends;
 
 
-// GLUT CALLBACK functions ////////////////////////////////////////////////////
-void displayCB();
-void reshapeCB(int w, int h);
-void timerCB(int millisec);
-void idleCB();
-void keyboardCB(unsigned char key, int x, int y);
-void mouseCB(int button, int stat, int x, int y);
-void mouseMotionCB(int x, int y);
-
-// CALLBACK function when exit() called ///////////////////////////////////////
-void exitCB();
-
-// function declearations /////////////////////////////////////////////////////
-void initGL();
-int  initGLUT(int argc, char **argv);
-bool initSharedMem();
-void clearSharedMem();
-void initLights();
-void setCamera(float posX, float posY, float posZ, float targetX, float targetY, float targetZ);
-void drawString(const char *str, int x, int y, float color[4], void *font);
-void drawString3D(const char *str, float pos[3], float color[4], void *font);
-void showInfo();
-void showFPS();
-void draw();
-bool checkFramebufferStatus();
-void printFramebufferInfo();
-std::string convertInternalFormatToString(GLenum format);
-std::string getTextureParameters(GLuint id);
-std::string getRenderbufferParameters(GLuint id);
-
-
-// constants
-const int SCREEN_WIDTH = 400;
-const int SCREEN_HEIGHT = 300;
-const int TEXTURE_WIDTH = 256;
-const int TEXTURE_HEIGHT = 256;
-
 // global variables
 void *font = GLUT_BITMAP_8_BY_13;
 GLuint fboId;                       // ID of FBO
-GLuint textureId;                   // ID of texture
+GLuint imTextureId;                   // ID of texture
 GLuint rboId;                       // ID of Renderbuffer object
 bool mouseLeftDown;
 bool mouseRightDown;
@@ -82,34 +45,32 @@ float playTime;                     // to compute rotation angle
 float renderToTextureTime;          // elapsed time for render-to-texture
 
 
-
-
-
 ///////////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
-  initSharedMem();
-
-  // register exit callback
-  atexit(exitCB);
-
-  // init GLUT and GL
-  initGLUT(argc, argv);
-  initGL();
-
-  // create a texture object
-  glGenTextures(1, &textureId);
-  glBindTexture(GL_TEXTURE_2D, textureId);
+ 
+  // Create a texture object,
+  glGenTextures(1, &imTextureId);
+  glBindTexture(GL_TEXTURE_2D, imTextureId);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap generation included in OpenGL v1.4
+  // glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // automatic mipmap generation included in OpenGL v1.4
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, TEXTURE_WIDTH, TEXTURE_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+  // 0 or techniqually speaking, NULL texture object unbinds the texutre buffer, so whatever settings
+  // we have done so far will not haunt us later
   glBindTexture(GL_TEXTURE_2D, 0);
+
+  // Note !!!!!!!!!!!!!!!!!!!!!!!!
+  // When you create a texture image for depth buffer, use GL_RGBA32F_ARB to make sure than memory use floating number
+  // rather than integers !!!!!!!!
+  // Remember to set the texture image size to image width and image height
+  // We don't need mipmaps, get rid of them
 
   // get OpenGL info
   glInfo glInfo;
@@ -146,7 +107,7 @@ int main(int argc, char **argv)
       glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0);
 
       // attach a texture to FBO color attachement point
-      glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, textureId, 0);
+      glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, imTextureId, 0);
 
       // attach a renderbuffer to depth attachment point
       glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, rboId);
@@ -232,7 +193,7 @@ bool initSharedMem()
 ///////////////////////////////////////////////////////////////////////////////
 void clearSharedMem()
 {
-  glDeleteTextures(1, &textureId);
+  glDeleteTextures(1, &imTextureId);
 
   // clean up FBO, RBO
   if(fboSupported)
@@ -632,91 +593,27 @@ std::string convertInternalFormatToString(GLenum format)
 
 void displayCB()
 {
-  // get the total elapsed time
-  playTime = (float)timer.getElapsedTime();
-
-  // compute rotation angle
-  const float ANGLE_SPEED = 90;   // degree/s
-  float angle = ANGLE_SPEED * playTime;
-
-  // render to texture //////////////////////////////////////////////////////
-  t1.start();
-
-  // adjust viewport and projection matrix to texture dimension
-  glViewport(0, 0, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(60.0f, (float)(TEXTURE_WIDTH)/TEXTURE_HEIGHT, 1.0f, 100.0f);
-  glMatrixMode(GL_MODELVIEW);
-
   // with FBO
   // render directly to a texture
-  if(fboUsed)
-    {
-      // set the rendering destination to FBO
-      glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboId);
 
-      // clear buffer
-      glClearColor(1, 1, 1, 1);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  // set the rendering destination to FBO
+  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboId);
 
-      // draw a rotating teapot
-      glPushMatrix();
-      glRotatef(angle*0.5f, 1, 0, 0);
-      glRotatef(angle, 0, 1, 0);
-      glRotatef(angle*0.7f, 0, 0, 1);
-      glTranslatef(0, -1.575f, 0);
-      drawTeapot();
-      glPopMatrix();
+  // back to normal window-system-provided framebuffer
+  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0); // unbind
 
-      // back to normal window-system-provided framebuffer
-      glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0); // unbind
+  // trigger mipmaps generation explicitly
+  // NOTE: If GL_GENERATE_MIPMAP is set to GL_TRUE, then glCopyTexSubImage2D()
+  // triggers mipmap generation automatically. However, the texture attached
+  // onto a FBO should generate mipmaps manually via glGenerateMipmapEXT().
+  //  glBindTexture(GL_TEXTURE_2D, imTextureId);
+  // glGenerateMipmapEXT(GL_TEXTURE_2D);
+  // glBindTexture(GL_TEXTURE_2D, 0);
 
-      // trigger mipmaps generation explicitly
-      // NOTE: If GL_GENERATE_MIPMAP is set to GL_TRUE, then glCopyTexSubImage2D()
-      // triggers mipmap generation automatically. However, the texture attached
-      // onto a FBO should generate mipmaps manually via glGenerateMipmapEXT().
-      glBindTexture(GL_TEXTURE_2D, textureId);
-      glGenerateMipmapEXT(GL_TEXTURE_2D);
-      glBindTexture(GL_TEXTURE_2D, 0);
-    }
-
-
-  // measure the elapsed time of render-to-texture
-  t1.stop();
-  renderToTextureTime = t1.getElapsedTimeInMilliSec();
-  ///////////////////////////////////////////////////////////////////////////
-
-
-  // rendering as normal ////////////////////////////////////////////////////
-
-  // back to normal viewport and projection matrix
-  glViewport(0, 0, screenWidth, screenHeight);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(60.0f, (float)(screenWidth)/screenHeight, 1.0f, 100.0f);
-  glMatrixMode(GL_MODELVIEW);
 
   // clear framebuffer
   glClearColor(0, 0, 0, 0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-  glPushMatrix();
-
-  // tramsform camera
-  glTranslatef(0, 0, cameraDistance);
-  glRotatef(cameraAngleX, 1, 0, 0);   // pitch
-  glRotatef(cameraAngleY, 0, 1, 0);   // heading
-
-  // draw a cube with the dynamic texture
-  draw();
-
-  glPopMatrix();
-
-  // draw info messages
-  showInfo();
-  showFPS();
-  glutSwapBuffers();
 }
 
 
