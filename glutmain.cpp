@@ -38,7 +38,7 @@ using namespace std;
 CMD2Model Ogro;
 CMD2Model Weapon;
 
-bool b_record = false;
+// bool b_record = false;
 
 bool  bAnimated	 = true;
 float angle      = 0.0;
@@ -158,9 +158,6 @@ void Model2World()
 
 void record()
 {
-  if(!b_record)
-    return;
-
   unsigned char* depth = new unsigned char[window_width*window_height*4];
 
   // glBindTexture(GL_TEXTURE_2D, depthTextureId);
@@ -174,7 +171,7 @@ void record()
   
   delete[] depth;
 
-  b_record = false;
+  // b_record = false;
 }
 
 // --------------------------------------------------
@@ -317,49 +314,6 @@ void Init( int width, int height )
 
 
 // --------------------------------------------------
-// Special() - keyboard input (special keys).
-// --------------------------------------------------
-
-void Special( int key, int x, int y )
-{
-  switch( key )
-    {
-    case GLUT_KEY_LEFT:
-      angle -= 5.0;
-      break;
-
-    case GLUT_KEY_RIGHT:
-      angle += 5.0;
-      break;
-
-    case GLUT_KEY_UP:
-      g_angle -= 10.0;
-      break;
-
-    case GLUT_KEY_DOWN:
-      g_angle += 10.0;
-      break;
-    }
-}
-
-void Keyboard(unsigned char key, int x, int y)
-{
-  if( key != 'd' )
-    return;
-
-  b_record = true;
-}
-
-void Idle()
-{
-  CTimer::GetInstance()->Update();
-	
-  glutPostRedisplay();
-}
-
-
-
-// --------------------------------------------------
 // main() - main function.
 // --------------------------------------------------
 // Note: This program should also has a depth map as output
@@ -398,37 +352,41 @@ int main( int argc, char *argv[] )
   cf = atof(argv[ArgCount++]);
 
   // setup glut
-  glutInit( &argc, argv );
-  glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
+  // glutInit( &argc, argv );
+  // glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
 
   // Those number need to be user input
   window_width  = 640;
   window_height = 480;
 
   // initialize window size
-  glutInitWindowSize( window_width, window_height );
+  // glutInitWindowSize( window_width, window_height );
 
   // initialize window position
-  glutInitWindowPosition( 100, 100 );
+  // glutInitWindowPosition( 100, 100 );
 
   // create the window
-  glutCreateWindow( "Quake2's MD2 Model Loader" );
+  // glutCreateWindow( "Quake2's MD2 Model Loader" );
 
   // setup opengl
+
   Init( window_width, window_height );
+  Reshape( window_width, window_height );
+  Display();
+
 
   // Clean up functions
-  atexit(clearFBO);
+  clearFBO();
 
   // callback functions
-  glutSpecialFunc( Special );
-  glutReshapeFunc( Reshape );
-  glutDisplayFunc( Display );
-  glutKeyboardFunc( Keyboard );
-  glutIdleFunc( Idle );
+  // glutSpecialFunc( Special );
+  // glutReshapeFunc( Reshape );
+  // glutDisplayFunc( Display );
+  // glutKeyboardFunc( Keyboard );
+  // glutIdleFunc( Idle );
 
 
-  glutMainLoop();
+  // glutMainLoop();
 
   return 0;
 }
