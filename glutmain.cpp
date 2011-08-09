@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <cmath>
 #include <cstdlib>
+#include <fstream>
 
 #include "texture.h"
 #include "timer.h"
@@ -37,9 +38,14 @@ using namespace std;
 CMD2Model Ogro;
 CMD2Model Weapon;
 
+bool b_record = false;
+
 bool  bAnimated	 = true;
 float angle      = 0.0;
 extern float g_angle;
+
+int window_width;
+int window_height;
 
 GLuint colorTextureId, depthTextureId, fboId;
 
@@ -150,6 +156,27 @@ void Model2World()
   glMultMatrixf(m);
 }
 
+void record()
+{
+  if(!b_record)
+    return;
+
+  unsigned char* depth = new unsigned char[window_width*window_height*4];
+
+  // glBindTexture(GL_TEXTURE_2D, depthTextureId);
+  glReadPixels(0, 0, window_width, window_height, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, depth);
+  // glBindTexture(GL_TEXTURE_2D, 0);
+
+  ofstream ofm;
+  ofm.open("test.dat", ios::binary | ios::trunc);
+  ofm.write((char*)depth, window_width*window_height*4);
+  ofm.close();
+  
+  delete[] depth;
+
+  b_record = false;
+}
+
 // --------------------------------------------------
 // Display() - draw the main scene.
 // ----------------------------------------------
@@ -190,6 +217,8 @@ void Display( void )
   // draw models
   Ogro.DrawModel( bAnimated ? timesec : 0.0 );
   Weapon.DrawModel( bAnimated ? timesec : 0.0 );
+
+  record();
 
   // back to normal window-system-provided framebuffer
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
@@ -313,6 +342,14 @@ void Special( int key, int x, int y )
     }
 }
 
+void Keyboard(unsigned char key, int x, int y)
+{
+  if( key != 'd' )
+    return;
+
+  b_record = true;
+}
+
 void Idle()
 {
   CTimer::GetInstance()->Update();
@@ -365,8 +402,8 @@ int main( int argc, char *argv[] )
   glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
 
   // Those number need to be user input
-  int window_width  = 640;
-  int window_height = 480;
+  window_width  = 640;
+  window_height = 480;
 
   // initialize window size
   glutInitWindowSize( window_width, window_height );
@@ -387,6 +424,7 @@ int main( int argc, char *argv[] )
   glutSpecialFunc( Special );
   glutReshapeFunc( Reshape );
   glutDisplayFunc( Display );
+  glutKeyboardFunc( Keyboard );
   glutIdleFunc( Idle );
 
 
