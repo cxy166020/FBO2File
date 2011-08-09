@@ -31,4 +31,3 @@ std::string getRenderbufferParameters(GLuint id);
 std::string convertInternalFormatToString(GLenum format);
 
 #endif
-

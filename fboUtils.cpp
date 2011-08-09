@@ -74,36 +74,6 @@ void initFBO(int ImWidth, int ImHeight, GLuint& colorTextureId, GLuint& depthTex
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// To be called by GL clean up function
-///////////////////////////////////////////////////////////////////////////////
-void clearFBO(GLuint& colorTextureId, GLuint& depthTextureId, GLuint& fboId)
-{
-  glDeleteTextures(1, &colorTextureId);
-  glDeleteTextures(1, &depthTextureId);
-
-  glDeleteFramebuffersEXT(1, &fboId);
-}
-
-
-//=============================================================================
-// To be called by GL dispaly function
-//=============================================================================
-
-void render2FBO(GLuint fboId)
-{
-  // set the rendering destination to FBO
-  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboId);
-}
-
-
-void unbindFBO()
-{
-  // back to normal window-system-provided framebuffer
-  glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 // display info messages
 ///////////////////////////////////////////////////////////////////////////////
 // void showInfo()
