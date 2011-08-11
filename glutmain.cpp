@@ -38,7 +38,7 @@ using namespace std;
 CMD2Model Ogro;
 CMD2Model Weapon;
 
-bool b_record = false;
+bool b_record = true;
 bool b_fbo    = false;
 
 bool  bAnimated	 = true;
