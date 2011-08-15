@@ -45,6 +45,8 @@ bool  bAnimated	 = true;
 float angle      = 0.0;
 extern float g_angle;
 
+float scale = 0.25;
+
 int window_width;
 int window_height;
 
@@ -66,7 +68,7 @@ float px, py, pz;
 float ux, uy, uz;
 
 // Principal axis of first view
-float px_1, py_1, pz_1;
+float cx_1, cy_1, cz_1;
 
 // Focal length (In pixels)
 float cf;
@@ -116,7 +118,7 @@ void Model2World()
   // Note that the z axis of the model is sort of pointing back
   // to the camera, so the temporary vector is the negation of
   // principal axis
-  zWorld[0] = -px_1; zWorld[1] = -py_1; zWorld[2] = -pz_1;
+  zWorld[0] = cx_1-ox; zWorld[1] = cy_1-oy; zWorld[2] = cz_1-oz;
 
   cross(yWorld, zWorld, xWorld);
   cross(xWorld, yWorld, zWorld);
@@ -153,8 +155,6 @@ void Model2World()
   m[7]  = 0;
   m[11] = 0;
   m[15] = 1;
-
-  cout << endl;
 
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
@@ -261,7 +261,7 @@ void Reshape( int width, int height )
   // gluPerspective( 70.0, (float)width/(float)height, 0.1, 50.0 );
   float fovy = 2*atan(height/(2*cf))*180/PI;
 
-  gluPerspective(fovy, (float)width/(float)height, 0.1, 50.0);
+  gluPerspective(fovy, (float)width/(float)height, 0.1, 1000.0);
 
   // reset model/view matrix
   // glMatrixMode( GL_MODELVIEW );
@@ -306,13 +306,13 @@ void Init( int width, int height )
   // load and initialize the Ogros model
   Ogro.LoadModel( "models/Ogros.md2" );
   Ogro.LoadSkin( "models/igdosh.pcx" );
-  Ogro.ScaleModel( 0.25 );
+  Ogro.ScaleModel( scale );
 	
 
   // load and initialize Ogros' weapon model
   Weapon.LoadModel( "models/Weapon.md2" );
   Weapon.LoadSkin( "models/Weapon.pcx" );
-  Weapon.ScaleModel( 0.25 );
+  Weapon.ScaleModel( scale );
 	
 
   // opengl lighting initialization
@@ -401,10 +401,10 @@ int main( int argc, char *argv[] )
   cy = atof(argv[ArgCount++]);
   cz = atof(argv[ArgCount++]);
 
-  // Principal axis of first view (In world coordinate system)
-  px_1 = atof(argv[ArgCount++]);
-  py_1 = atof(argv[ArgCount++]);
-  pz_1 = atof(argv[ArgCount++]);
+  // Camera center of the first view
+  cx_1 = atof(argv[ArgCount++]);
+  cy_1 = atof(argv[ArgCount++]);
+  cz_1 = atof(argv[ArgCount++]);
 
   // Principal axis of current view (In world coordinate system)
   px = atof(argv[ArgCount++]);
@@ -418,6 +418,9 @@ int main( int argc, char *argv[] )
 
   // Focal length (In pixels)
   cf = atof(argv[ArgCount++]);
+
+  // scale
+  scale = atof(argv[ArgCount++]);
 
   // setup glut
   glutInit( &argc, argv );
