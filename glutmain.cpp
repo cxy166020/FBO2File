@@ -57,6 +57,9 @@ float tx, ty, tz;
 
 // 3D location of AR object origin
 float ox, oy, oz;
+
+// [R T] matrix, will be used for projection transformation
+float r[16];
   
 // Camera center (In world coordinate system)
 // float cx, cy, cz;
@@ -72,6 +75,9 @@ float cx_1, cy_1, cz_1;
 
 // Focal length (In pixels)
 float cf;
+
+string OutputDepthName;
+string OutputColorName;
 /////////////////////////////////////////////////
 
 
@@ -194,41 +200,6 @@ void Model2World()
   m[15] = 1;
 
   
-  float r[16];
-
-
-  r[0]  =  0.7010;
-  r[4]  =  0.5179;
-  r[8]  = -0.4903;
-  r[12] = -1.4451;
-
-
-  r[1]  = -0.5492;
-  r[5]  =  0.8306;
-  r[9]  =  0.0922;
-  r[13] =  0.1574;
-
-
-  r[2]  =  0.4549;
-  r[6]  =  0.2047;
-  r[10] =  0.8667;
-  r[14] = -0.1335;
-
-  r[3]  = 0;
-  r[7]  = 0;
-  r[11] = 0;
-  r[15] = 1;
-
-
-  // for(int i=0; i<4; i++)
-  //   {
-  //     for(int j=0; j<4; j++)
-  // 	{
-  // 	  cout << m[j*4+i] << " ";
-  // 	}
-  //     cout << endl;
-  //   }
-
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
 
@@ -248,18 +219,27 @@ void record()
   if(!b_record)
     return;
 
+  const int ColorChannel = 3;
+
   unsigned char* depth = new unsigned char[window_width*window_height];
+  unsigned char* color = new unsigned char[window_width*window_height*ColorChannel];
 
   // glBindTexture(GL_TEXTURE_2D, depthTextureId);
   glReadPixels(0, 0, window_width, window_height, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, depth);
+  glReadPixels(0, 0, window_width, window_height, GL_RGB,             GL_UNSIGNED_BYTE, color);
   // glBindTexture(GL_TEXTURE_2D, 0);
 
   ofstream ofm;
-  ofm.open("test.dat", ios::binary | ios::trunc);
+  ofm.open(OutputDepthName.c_str(), ios::binary | ios::trunc);
   ofm.write((char*)depth, window_width*window_height);
   ofm.close();
-  
+
+  ofm.open(OutputColorName.c_str(), ios::binary | ios::trunc);
+  ofm.write((char*)color, window_width*window_height*ColorChannel);
+  ofm.close();
+
   delete[] depth;
+  delete[] color;
 
   b_record = false;
 }
@@ -283,8 +263,6 @@ void Display( void )
 
   glPushMatrix();
 
-  // gluLookAt(0.0, 0.0, 30.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-  
 
   CTimer::GetInstance()->Update();
   float timesec = CTimer::GetInstance()->GetTimeMSec() / 1000.0;
@@ -515,11 +493,38 @@ int main( int argc, char *argv[] )
   window_width  = atoi(argv[ArgCount++]);
   window_height = atoi(argv[ArgCount++]);
 
+
+  // R matrix (From bundle adjustment)
+  r[0]  = atof(argv[ArgCount++]);
+  r[4]  = atof(argv[ArgCount++]);
+  r[8]  = atof(argv[ArgCount++]);
+
+  r[1]  = atof(argv[ArgCount++]);
+  r[5]  = atof(argv[ArgCount++]);
+  r[9]  = atof(argv[ArgCount++]);
+
+  r[2]  = atof(argv[ArgCount++]);
+  r[6]  = atof(argv[ArgCount++]);
+  r[10] = atof(argv[ArgCount++]);
+
+  // T matrix (From bundle adjustment, T is associated with focal length,
+  // bundle adjustment should use pre-calibrated focal length in order
+  // to preserve scale)
+  r[12] = atof(argv[ArgCount++]) ;
+  r[13] = atof(argv[ArgCount++]);
+  r[14] = atof(argv[ArgCount++]);
+
+  r[3]  = 0;
+  r[7]  = 0;
+  r[11] = 0;
+  r[15] = 1;
+
+  OutputDepthName = argv[ArgCount++];
+  OutputColorName = argv[ArgCount++];
+
   // setup glut
   glutInit( &argc, argv );
   glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
-
- 
 
   // initialize window size
   glutInitWindowSize( window_width, window_height );
