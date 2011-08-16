@@ -76,6 +76,9 @@ float cx_1, cy_1, cz_1;
 // Focal length (In pixels)
 float cf;
 
+// Near and far plane
+float zNear, zFar;
+
 string OutputDepthName;
 string OutputColorName;
 /////////////////////////////////////////////////
@@ -328,7 +331,7 @@ void Reshape( int width, int height )
   // gluPerspective( 70.0, (float)width/(float)height, 0.1, 50.0 );
   float fovy = 2*atan(height/(2*cf))*180/PI;
 
-  gluPerspective(fovy, (float)width/(float)height, 0.1, 1000.0);
+  gluPerspective(fovy, (float)width/(float)height, zNear, zFar);
 
   // reset model/view matrix
   glMatrixMode( GL_MODELVIEW );
@@ -521,6 +524,10 @@ int main( int argc, char *argv[] )
 
   OutputDepthName = argv[ArgCount++];
   OutputColorName = argv[ArgCount++];
+
+  // Near and far plane
+  zNear = atof(argv[ArgCount++]);
+  zFar  = atof(argv[ArgCount++]);
 
   // setup glut
   glutInit( &argc, argv );
