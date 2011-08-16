@@ -59,10 +59,10 @@ float tx, ty, tz;
 float ox, oy, oz;
   
 // Camera center (In world coordinate system)
-float cx, cy, cz;
+// float cx, cy, cz;
 
 // Camera principal axis (In world coordinate system)
-float px, py, pz;
+// float px, py, pz;
 
 // Up vector of current view
 float ux, uy, uz;
@@ -112,6 +112,30 @@ float cos(float a[3], float b[3])
   float b_norm = sqrt(b[0]*b[0] + b[1]*b[1] + b[2]*b[2]);
 
   return (a[0]*b[0] + a[1]*b[1] + a[2]*b[2])/(a_norm*b_norm);
+}
+
+
+void matmul4x4_4x4(float a[16], float b[16], float c[16])
+{
+  c[0]  = a[0]*b[0]  + a[4]*b[1]  + a[8]*b[2]   + a[12]*b[3];
+  c[4]  = a[0]*b[4]  + a[4]*b[5]  + a[8]*b[6]   + a[12]*b[7];
+  c[8]  = a[0]*b[8]  + a[4]*b[9]  + a[8]*b[10]  + a[12]*b[11];
+  c[12] = a[0]*b[12] + a[4]*b[13] + a[8]*b[14]  + a[12]*b[15];
+
+  c[1]  = a[1]*b[0]  + a[5]*b[1]  + a[9]*b[2]   + a[13]*b[3];
+  c[5]  = a[1]*b[4]  + a[5]*b[5]  + a[9]*b[6]   + a[13]*b[7];
+  c[9]  = a[1]*b[8]  + a[5]*b[9]  + a[9]*b[10]  + a[13]*b[11];
+  c[13] = a[1]*b[12] + a[5]*b[13] + a[9]*b[14]  + a[13]*b[15];
+  
+  c[2]  = a[2]*b[0]  + a[6]*b[1]  + a[10]*b[2]  + a[14]*b[3];
+  c[6]  = a[2]*b[4]  + a[6]*b[5]  + a[10]*b[6]  + a[14]*b[7];
+  c[10] = a[2]*b[8]  + a[6]*b[9]  + a[10]*b[10] + a[14]*b[11];
+  c[14] = a[2]*b[12] + a[6]*b[13] + a[10]*b[14] + a[14]*b[15];
+  
+  c[3]  = a[3]*b[0]  + a[7]*b[1]  + a[11]*b[2]  + a[15]*b[3];
+  c[7]  = a[3]*b[4]  + a[7]*b[5]  + a[11]*b[6]  + a[15]*b[7];
+  c[11] = a[3]*b[8]  + a[7]*b[9]  + a[11]*b[10] + a[15]*b[11];
+  c[15] = a[3]*b[12] + a[7]*b[13] + a[11]*b[14] + a[15]*b[15];
 }
 
 
@@ -169,21 +193,54 @@ void Model2World()
   m[11] = 0;
   m[15] = 1;
 
-  for(int i=0; i<4; i++)
-    {
-      for(int j=0; j<4; j++)
-	{
-	  cout << m[j*4+i] << " ";
-	}
-      cout << endl;
-    }
+  
+  float r[16];
+
+
+  r[0]  =  0.7010;
+  r[4]  =  0.5179;
+  r[8]  = -0.4903;
+  r[12] = -1.4451;
+
+
+  r[1]  = -0.5492;
+  r[5]  =  0.8306;
+  r[9]  =  0.0922;
+  r[13] =  0.1574;
+
+
+  r[2]  =  0.4549;
+  r[6]  =  0.2047;
+  r[10] =  0.8667;
+  r[14] = -0.1335;
+
+  r[3]  = 0;
+  r[7]  = 0;
+  r[11] = 0;
+  r[15] = 1;
+
+
+  // for(int i=0; i<4; i++)
+  //   {
+  //     for(int j=0; j<4; j++)
+  // 	{
+  // 	  cout << m[j*4+i] << " ";
+  // 	}
+  //     cout << endl;
+  //   }
 
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
 
   // Multiply the precomputed transformation matrix to 
   // model view matrix
-  glMultMatrixf(m);
+  float rm[16];
+  
+  matmul4x4_4x4(r, m, rm);
+  
+  // glMultMatrixf(r);
+  // glMultMatrixf(m);
+  glMultMatrixf(rm);
 }
 
 void record()
@@ -224,8 +281,10 @@ void Display( void )
   glLoadIdentity();
 
 
+  glPushMatrix();
+
   // gluLookAt(0.0, 0.0, 30.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
-  gluLookAt(cx, cy, cz, cx+px, cy+py, cz+pz, ux, uy, uz);
+  
 
   CTimer::GetInstance()->Update();
   float timesec = CTimer::GetInstance()->GetTimeMSec() / 1000.0;
@@ -244,12 +303,20 @@ void Display( void )
     angle -= 360.0;
 
 
+  Model2World();
+
   // Respond to left and right key strokes
   glRotatef( angle, 0.0, 1.0, 0.0 );
 
+  
+  // gluLookAt(cx, cy, cz, cx+px, cy+py, cz+pz, ux, uy, uz);
+
+  
   // draw models
   Ogro.DrawModel( bAnimated ? timesec : 0.0 );
   Weapon.DrawModel( bAnimated ? timesec : 0.0 );
+
+  glPopMatrix();
 
   record();
 
@@ -286,11 +353,11 @@ void Reshape( int width, int height )
   gluPerspective(fovy, (float)width/(float)height, 0.1, 1000.0);
 
   // reset model/view matrix
-  // glMatrixMode( GL_MODELVIEW );
-  // glLoadIdentity();
+  glMatrixMode( GL_MODELVIEW );
+  glLoadIdentity();
 
   // Transform to world coordinate system
-  Model2World();
+  // Model2World();
 }
 
 
@@ -419,9 +486,9 @@ int main( int argc, char *argv[] )
   oz = atof(argv[ArgCount++]);
   
   // Camera center (In world coordinate system)
-  cx = atof(argv[ArgCount++]);
-  cy = atof(argv[ArgCount++]);
-  cz = atof(argv[ArgCount++]);
+  // cx = atof(argv[ArgCount++]);
+  // cy = atof(argv[ArgCount++]);
+  // cz = atof(argv[ArgCount++]);
 
   // Camera center of the first view
   cx_1 = atof(argv[ArgCount++]);
@@ -429,9 +496,9 @@ int main( int argc, char *argv[] )
   cz_1 = atof(argv[ArgCount++]);
 
   // Principal axis of current view (In world coordinate system)
-  px = atof(argv[ArgCount++]);
-  py = atof(argv[ArgCount++]);
-  pz = atof(argv[ArgCount++]);
+  // px = atof(argv[ArgCount++]);
+  // py = atof(argv[ArgCount++]);
+  // pz = atof(argv[ArgCount++]);
 
   // Up vector of current view (In world coordinate system)
   ux = atof(argv[ArgCount++]);
