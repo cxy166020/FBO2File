@@ -85,13 +85,24 @@ void clearFBO()
 }
 
 
+// Nomalize vector
+void normalize(float a[3])
+{
+  float norm = sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+  a[0] /= norm;
+  a[1] /= norm;
+  a[2] /= norm;
+}
+
 // Calculate cross product
-// c = a x b
+// c = a x b, c is normalized
 void cross(float a[3], float b[3], float c[3])
 {
   c[0] = a[1]*b[2] - a[2]*b[1];
   c[1] = a[2]*b[0] - a[0]*b[2];
   c[2] = a[0]*b[1] - a[1]*b[0];
+
+  normalize(c);
 }
 
 // Calculate cosine of angle between two vectors
@@ -103,13 +114,14 @@ float cos(float a[3], float b[3])
   return (a[0]*b[0] + a[1]*b[1] + a[2]*b[2])/(a_norm*b_norm);
 }
 
+
 // Transform model coordinate system to world coordinate system
 void Model2World()
 {
   // Find the vector representations of model coordinate system
   // in the world coordinate system
   float xWorld[3], yWorld[3], zWorld[3];
-  float xModel[3], yModel[3], zModel[3];
+  // float xModel[3], yModel[3], zModel[3];
   
   yWorld[0] = tx; yWorld[1] = ty; yWorld[2] = tz;
   
@@ -122,10 +134,11 @@ void Model2World()
 
   cross(yWorld, zWorld, xWorld);
   cross(xWorld, yWorld, zWorld);
+  normalize(yWorld);
 
-  xModel[0] = 1; xModel[1] = 0; xModel[2] = 0;
-  yModel[0] = 0; yModel[1] = 1; yModel[2] = 0;
-  zModel[0] = 0; zModel[1] = 0; zModel[2] = 1;
+  // xModel[0] = 1; xModel[1] = 0; xModel[2] = 0;
+  // yModel[0] = 0; yModel[1] = 1; yModel[2] = 0;
+  // zModel[0] = 0; zModel[1] = 0; zModel[2] = 1;
 
   // Note that matrices in OpenGL are stored column-wise
   //
@@ -136,25 +149,34 @@ void Model2World()
 
   float m[16];
 
-  m[0]  = cos(xWorld, xModel); 
-  m[4]  = cos(xWorld, yModel); 
-  m[8]  = cos(xWorld, zModel);
+  m[0]  = xWorld[0]; // cos(xWorld, xModel); 
+  m[4]  = yWorld[0]; // cos(xWorld, yModel); 
+  m[8]  = zWorld[0]; // cos(xWorld, zModel);
   m[12] = ox;
 
-  m[1]  = cos(yWorld, xModel);
-  m[5]  = cos(yWorld, yModel);
-  m[9]  = cos(yWorld, zModel);
+  m[1]  = xWorld[1]; // cos(yWorld, xModel);
+  m[5]  = yWorld[1]; // cos(yWorld, yModel);
+  m[9]  = zWorld[1]; // cos(yWorld, zModel);
   m[13] = oy;
 
-  m[2]  = cos(zWorld, xModel);
-  m[6]  = cos(zWorld, yModel);
-  m[10] = cos(zWorld, zModel);
+  m[2]  = xWorld[2]; // cos(zWorld, xModel);
+  m[6]  = yWorld[2]; // cos(zWorld, yModel);
+  m[10] = zWorld[2]; // cos(zWorld, zModel);
   m[14] = oz;
 
   m[3]  = 0;
   m[7]  = 0;
   m[11] = 0;
   m[15] = 1;
+
+  for(int i=0; i<4; i++)
+    {
+      for(int j=0; j<4; j++)
+	{
+	  cout << m[j*4+i] << " ";
+	}
+      cout << endl;
+    }
 
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
@@ -422,13 +444,15 @@ int main( int argc, char *argv[] )
   // scale
   scale = atof(argv[ArgCount++]);
 
+  // Window width and height
+  window_width  = atoi(argv[ArgCount++]);
+  window_height = atoi(argv[ArgCount++]);
+
   // setup glut
   glutInit( &argc, argv );
   glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
 
-  // Those number need to be user input
-  window_width  = 640;
-  window_height = 480;
+ 
 
   // initialize window size
   glutInitWindowSize( window_width, window_height );

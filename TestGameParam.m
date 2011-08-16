@@ -1,4 +1,6 @@
-function TestGameParam
+clear
+clc
+close all
 
 K = [633.8 0 300; 0 633.8 170; 0 0 1 ];
 
@@ -36,29 +38,16 @@ z_world = -pa;
 x_world = cross(y_world, z_world);
 z_world = cross(x_world, y_world);
 
-x_world = x_world/50;
-z_world = z_world/5000;
+x_world = x_world/norm(x_world);
+y_world = y_world/norm(y_world);
+z_world = z_world/norm(z_world);
 
 x_model = [1 0 0];
 y_model = [0 1 0];
 z_model = [0 0 1];
 
 
-
-
-%  - x2 -      |- cos(x2x1) cos(x2y1) cos(x2z1) -|   - x1 -
-%  | y2 |   =  |  cos(y2x1) cos(y2y1) cos(y2z1)  | * | y1 |
-%  - z2 -      |- cos(z2x1) cos(z2y1) cos(z2z1) -|   - z1 -
-
-dcosine = [GetCos(x_world, x_model), GetCos(x_world, y_model), GetCos(x_world, z_model);
-           GetCos(y_world, x_model), GetCos(y_world, y_model), GetCos(y_world, z_model);
-           GetCos(z_world, x_model), GetCos(z_world, y_model), GetCos(z_world, z_model)];
-       
-       
-GetCos(dcosine*x_model', x_world)
-GetCos(dcosine*y_model', y_world)
-GetCos(dcosine*z_model', z_world)
-
+rotation = [x_world' y_world' z_world'];
 
 % Plot the whole thing 
 
@@ -91,12 +80,13 @@ plot3( [pt_3d(1) pt_3d(1)+z_world(1)], [pt_3d(2) pt_3d(2)+z_world(2)],...
         [pt_3d(3) pt_3d(3)+z_world(3)], '-c', 'LineWidth', 1 )
  
  hold off
-
-
  
  
  
-function val = GetCos(v1, v2)
+ model_view = [-0.701001 -27.4603 -0.45494 245.067 
+-0.517915 41.5295 -0.204657 109.932 
+0.490268 4.6078 -0.866686 467.464 ];
 
-val = dot(v1, v2)/(norm(v1)*norm(v2));
+
+model_view*[1 0 0 1]'
         
