@@ -448,3 +448,88 @@ std::string convertInternalFormatToString(GLenum format)
 
   return formatName;
 }
+
+// Read config file
+// ImNum: Total number of input images
+// scale: scale of model
+// n: terrain vector, y axis of model
+// o: 3D location of AR object origin
+// c: 3D locations of camera
+// u: up vector of current view
+// f: focal length 
+// r: rotation matrix
+// t: translation matrix
+void ReadConfig( std::string ConfigName, int& ImNum, float& scale, 
+		 int& window_width, int& window_height,
+		 float& zNear, float& zFar,
+		 float n[3],
+		 float o[3],
+		 float c[3],
+		 float**& u, float*& uBuf,
+		 float*& f, 
+		 float**& r, float*& rBuf,
+		 float**& t, float*& tBuf)
+{
+  std::ifstream ifm;
+
+  // Open the configuration file
+  ifm.open(ConfigName.c_str());
+
+  // Exit if the file cannot be openned
+  if(!ifm.good())
+    {
+      std::cerr<<"Cannot open config file " << ConfigName <<  " !!!"<<std::endl;
+      exit(1);
+    }
+
+  // Read number of images, sweeping distance, image name and scale
+  ifm >> ImNum >> scale >> zNear >> zFar >> window_width >> window_height;
+
+  // Allocate memory for t, o, c, r
+  u = Allocate2DArray<float>(ImNum, 3, uBuf);
+  r = Allocate2DArray<float>(ImNum, 9, rBuf);
+  t = Allocate2DArray<float>(ImNum, 3, tBuf);
+  f = new float[ImNum];
+
+  // Read terrain vector
+  ifm >> n[0] >> n[1] >> n[2];
+
+  // Read AR object coordinates
+  ifm >> o[0] >> o[1] >> o[2];
+
+  // Read the coordinate of camera center of view 1
+  ifm >> c[0] >> c[1] >> c[2];
+
+  // Start reading projective matrices
+  for(int i=0; i<ImNum; i++)
+    {
+      // Up vector
+      ifm >> u[i][0] >> u[i][1] >> u[i][2]; 
+
+      // Focal length
+      ifm >> f[i];
+
+      // Rotation
+      for(int j=0; j<9; j++)
+	{
+	  ifm >> r[i][j];
+	}
+
+      // Translation
+      ifm >> t[i][0] >> t[i][1] >> t[i][2];
+    }
+
+  ifm.close();
+}
+
+void ReleaseConfig( float**& u, float*& uBuf,
+		    float*& f, 
+		    float**& r, float*& rBuf,
+		    float**& t, float*& tBuf )
+{
+  Delete2DArray<float>(u, uBuf);
+  Delete2DArray<float>(r, rBuf);
+  Delete2DArray<float>(t, tBuf);
+
+  delete[] f;
+}
