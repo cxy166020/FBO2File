@@ -157,7 +157,7 @@ void matmul4x4_4x4(float a[16], float b[16], float c[16])
 void Model2World()
 {
   // Image counter
-  static i;
+  static int i;
 
   // Find the vector representations of model coordinate system
   // in the world coordinate system

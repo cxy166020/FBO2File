@@ -29,7 +29,7 @@ for i = 1:NumOfIm
     pa = det(M)*M(3, :);
     pa = pa/norm(pa);
     
-    plot3([C(1), C(1)+pa(1)], [C(2), C(2)+pa(2)], [C(3), C(3)+pa(3)], '-g');
+    plot3([C(1), -pa(1)+C(1)], [C(2), -pa(2)+C(2)], [C(3), -pa(3)+C(3)], '-g');
 end
 
 hold off
