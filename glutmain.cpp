@@ -50,16 +50,20 @@ float scale = 0.25;
 int window_width;
 int window_height;
 
+int ImNum = 0;
+
 GLuint colorTextureId, depthTextureId, fboId;
 
 // Terrain vector (In world coordinate system)
-float tx, ty, tz;
+float n[3];
+// float tx, ty, tz;
 
 // 3D location of AR object origin
-float ox, oy, oz;
+float o[3];
+// float ox, oy, oz;
 
 // [R T] matrix, will be used for projection transformation
-float r[16];
+float **u, *uBuf, *f, **r, *rBuf, **t, *tBuf;
   
 // Camera center (In world coordinate system)
 // float cx, cy, cz;
@@ -71,7 +75,8 @@ float r[16];
 float ux, uy, uz;
 
 // Principal axis of first view
-float cx_1, cy_1, cz_1;
+// float cx_1, cy_1, cz_1;
+float c[3];
 
 // Focal length (In pixels)
 float cf;
@@ -151,19 +156,24 @@ void matmul4x4_4x4(float a[16], float b[16], float c[16])
 // Transform model coordinate system to world coordinate system
 void Model2World()
 {
+  // Image counter
+  static i;
+
   // Find the vector representations of model coordinate system
   // in the world coordinate system
   float xWorld[3], yWorld[3], zWorld[3];
   // float xModel[3], yModel[3], zModel[3];
   
-  yWorld[0] = tx; yWorld[1] = ty; yWorld[2] = tz;
-  
+  // yWorld[0] = tx; yWorld[1] = ty; yWorld[2] = tz;
+  yWorld[0] = n[0]; yWorld[1] = n[1]; yWorld[2] = n[2];
+
   // The program assumes that the first view is frontal parallel
   // to the model
   // Note that the z axis of the model is sort of pointing back
   // to the camera, so the temporary vector is the negation of
   // principal axis
-  zWorld[0] = cx_1-ox; zWorld[1] = cy_1-oy; zWorld[2] = cz_1-oz;
+  // zWorld[0] = cx_1-ox; zWorld[1] = cy_1-oy; zWorld[2] = cz_1-oz;
+  zWorld[0] = c[0]-o[0]; zWorld[1] = c[1]-o[1]; zWorld[2] = c[2]-o[2];
 
   cross(yWorld, zWorld, xWorld);
   cross(xWorld, yWorld, zWorld);
@@ -185,22 +195,52 @@ void Model2World()
   m[0]  = xWorld[0]; // cos(xWorld, xModel); 
   m[4]  = yWorld[0]; // cos(xWorld, yModel); 
   m[8]  = zWorld[0]; // cos(xWorld, zModel);
-  m[12] = ox;
+  m[12] = o[0];
 
   m[1]  = xWorld[1]; // cos(yWorld, xModel);
   m[5]  = yWorld[1]; // cos(yWorld, yModel);
   m[9]  = zWorld[1]; // cos(yWorld, zModel);
-  m[13] = oy;
+  m[13] = o[1];
 
   m[2]  = xWorld[2]; // cos(zWorld, xModel);
   m[6]  = yWorld[2]; // cos(zWorld, yModel);
   m[10] = zWorld[2]; // cos(zWorld, zModel);
-  m[14] = oz;
+  m[14] = o[2];
 
   m[3]  = 0;
   m[7]  = 0;
   m[11] = 0;
   m[15] = 1;
+
+  float rt[16];
+
+  // R matrix (From bundle adjustment)
+  rt[0]  = r[i][0];
+  rt[4]  = r[i][1];
+  rt[8]  = r[i][2];
+
+  rt[1]  = r[i][3];
+  rt[5]  = r[i][4];
+  rt[9]  = r[i][5];
+
+  rt[2]  = r[i][6];
+  rt[6]  = r[i][7];
+  rt[10] = r[i][8];
+
+  // T matrix (From bundle adjustment, T is associated with focal length,
+  // bundle adjustment should use pre-calibrated focal length in order
+  // to preserve scale)
+  rt[12] = t[i][0];
+  rt[13] = t[i][1];
+  rt[14] = t[i][2];
+
+  rt[3]  = 0;
+  rt[7]  = 0;
+  rt[11] = 0;
+  rt[15] = 1;
+
+  // Counter increment
+  i++;
 
   
   glMatrixMode( GL_MODELVIEW );
@@ -210,7 +250,7 @@ void Model2World()
   // model view matrix
   float rm[16];
   
-  matmul4x4_4x4(r, m, rm);
+  matmul4x4_4x4(rt, m, rm);
   
   // glMultMatrixf(r);
   // glMultMatrixf(m);
@@ -232,14 +272,14 @@ void record()
   glReadPixels(0, 0, window_width, window_height, GL_RGB,             GL_UNSIGNED_BYTE, color);
   // glBindTexture(GL_TEXTURE_2D, 0);
 
-  ofstream ofm;
-  ofm.open(OutputDepthName.c_str(), ios::binary | ios::trunc);
-  ofm.write((char*)depth, window_width*window_height);
-  ofm.close();
+  // ofstream ofm;
+  // ofm.open(OutputDepthName.c_str(), ios::binary | ios::trunc);
+  // ofm.write((char*)depth, window_width*window_height);
+  // ofm.close();
 
-  ofm.open(OutputColorName.c_str(), ios::binary | ios::trunc);
-  ofm.write((char*)color, window_width*window_height*ColorChannel);
-  ofm.close();
+  // ofm.open(OutputColorName.c_str(), ios::binary | ios::trunc);
+  // ofm.write((char*)color, window_width*window_height*ColorChannel);
+  // ofm.close();
 
   delete[] depth;
   delete[] color;
@@ -454,80 +494,21 @@ int main( int argc, char *argv[] )
       return 0;
     }
 
-  int ArgCount = 1;
-
-  // Terrain vector (In world coordinate system)
-  tx = atof(argv[ArgCount++]);
-  ty = atof(argv[ArgCount++]);
-  tz = atof(argv[ArgCount++]);
-
-  // 3D location of AR object origin (In world coordinate system)
-  ox = atof(argv[ArgCount++]);
-  oy = atof(argv[ArgCount++]);
-  oz = atof(argv[ArgCount++]);
   
-  // Camera center (In world coordinate system)
-  // cx = atof(argv[ArgCount++]);
-  // cy = atof(argv[ArgCount++]);
-  // cz = atof(argv[ArgCount++]);
+  
+  int ArgCount = 1;
+  
+  std::string ConfigName = argv[ArgCount++];
 
-  // Camera center of the first view
-  cx_1 = atof(argv[ArgCount++]);
-  cy_1 = atof(argv[ArgCount++]);
-  cz_1 = atof(argv[ArgCount++]);
+  
 
-  // Principal axis of current view (In world coordinate system)
-  // px = atof(argv[ArgCount++]);
-  // py = atof(argv[ArgCount++]);
-  // pz = atof(argv[ArgCount++]);
-
-  // Up vector of current view (In world coordinate system)
-  ux = atof(argv[ArgCount++]);
-  uy = atof(argv[ArgCount++]);
-  uz = atof(argv[ArgCount++]);
-
-  // Focal length (In pixels)
-  cf = atof(argv[ArgCount++]);
-
-  // scale
-  scale = atof(argv[ArgCount++]);
-
-  // Window width and height
-  window_width  = atoi(argv[ArgCount++]);
-  window_height = atoi(argv[ArgCount++]);
+  ReadConfig(ConfigName, ImNum, scale, window_width, window_height,
+	     zNear, zFar, n, o, c, u, uBuf, f, r, rBuf, t, tBuf);
 
 
-  // R matrix (From bundle adjustment)
-  r[0]  = atof(argv[ArgCount++]);
-  r[4]  = atof(argv[ArgCount++]);
-  r[8]  = atof(argv[ArgCount++]);
+  // OutputDepthName = argv[ArgCount++];
+  // OutputColorName = argv[ArgCount++];
 
-  r[1]  = atof(argv[ArgCount++]);
-  r[5]  = atof(argv[ArgCount++]);
-  r[9]  = atof(argv[ArgCount++]);
-
-  r[2]  = atof(argv[ArgCount++]);
-  r[6]  = atof(argv[ArgCount++]);
-  r[10] = atof(argv[ArgCount++]);
-
-  // T matrix (From bundle adjustment, T is associated with focal length,
-  // bundle adjustment should use pre-calibrated focal length in order
-  // to preserve scale)
-  r[12] = atof(argv[ArgCount++]) ;
-  r[13] = atof(argv[ArgCount++]);
-  r[14] = atof(argv[ArgCount++]);
-
-  r[3]  = 0;
-  r[7]  = 0;
-  r[11] = 0;
-  r[15] = 1;
-
-  OutputDepthName = argv[ArgCount++];
-  OutputColorName = argv[ArgCount++];
-
-  // Near and far plane
-  zNear = atof(argv[ArgCount++]);
-  zFar  = atof(argv[ArgCount++]);
 
   // setup glut
   glutInit( &argc, argv );
@@ -557,6 +538,10 @@ int main( int argc, char *argv[] )
 
 
   glutMainLoop();
+
+  // Release config
+  cout << "Exiting..." << endl;
+  ReleaseConfig(u, uBuf, f, r, rBuf, t, tBuf);
 
   return 0;
 }
