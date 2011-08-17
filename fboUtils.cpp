@@ -485,6 +485,10 @@ void ReadConfig( std::string ConfigName, int& ImNum, float& scale,
   // Read number of images, sweeping distance, image name and scale
   ifm >> ImNum >> scale >> zNear >> zFar >> window_width >> window_height;
 
+  std::cout << "Number of input images in sequence: " << ImNum  << std::endl;
+  std::cout << "Image width                       : " << window_width << std::endl;
+  std::cout << "Image height                      : " << window_height << std::endl;
+
   // Allocate memory for t, o, c, r
   u = Allocate2DArray<float>(ImNum, 3, uBuf);
   r = Allocate2DArray<float>(ImNum, 9, rBuf);
@@ -493,30 +497,47 @@ void ReadConfig( std::string ConfigName, int& ImNum, float& scale,
 
   // Read terrain vector
   ifm >> n[0] >> n[1] >> n[2];
+  std::cout << "Terrain vector                    : " 
+	    << n[0] << " " << n[1] << " " << n[2] << std::endl; 
 
   // Read AR object coordinates
   ifm >> o[0] >> o[1] >> o[2];
+  std::cout << "Location of AR object             : " 
+	    << o[0] << " " << o[1] << " " << o[2] << std::endl;
 
   // Read the coordinate of camera center of view 1
   ifm >> c[0] >> c[1] >> c[2];
+  std::cout << "Camera center of view 1           : " 
+	    << c[0] << " " << c[1] << " " << c[1] << std::endl;
 
   // Start reading projective matrices
   for(int i=0; i<ImNum; i++)
     {
       // Up vector
       ifm >> u[i][0] >> u[i][1] >> u[i][2]; 
+      std::cout << "Up vector                         : " 
+		<< u[i][0] << " " << u[i][1] << " " << u[i][2] << std::endl;
 
       // Focal length
       ifm >> f[i];
+      std::cout << "Focal length                      : "
+		<< f[i] << std::endl;
+
+      std::cout << "Rotation                          : ";
 
       // Rotation
       for(int j=0; j<9; j++)
 	{
 	  ifm >> r[i][j];
+	  std::cout << r[i][j] << " ";
 	}
+
+      std::cout << std::endl;
 
       // Translation
       ifm >> t[i][0] >> t[i][1] >> t[i][2];
+      std::cout << "Translation                       : " 
+		<< t[i][0] << " " << t[i][1] << " " << t[i][2] << std::endl;
     }
 
   ifm.close();

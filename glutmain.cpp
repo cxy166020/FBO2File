@@ -79,7 +79,7 @@ float ux, uy, uz;
 float c[3];
 
 // Focal length (In pixels)
-float cf;
+float cf = 600;
 
 // Near and far plane
 float zNear, zFar;
@@ -157,7 +157,7 @@ void matmul4x4_4x4(float a[16], float b[16], float c[16])
 void Model2World()
 {
   // Image counter
-  static int i;
+  int i = 3;
 
   // Find the vector representations of model coordinate system
   // in the world coordinate system
@@ -240,7 +240,8 @@ void Model2World()
   rt[15] = 1;
 
   // Counter increment
-  i++;
+  // if(i<ImNum-1)
+  //   i++;
 
   
   glMatrixMode( GL_MODELVIEW );
@@ -488,11 +489,11 @@ void Idle()
 // so that the AR program can do its own depth test
 int main( int argc, char *argv[] )
 {
-  if (argc<13)
-    {
-      cout << "Insufficient number of arguments" << endl;
-      return 0;
-    }
+  // if (argc<13)
+  //   {
+  //     cout << "Insufficient number of arguments" << endl;
+  //     return 0;
+  //   }
 
   
   
