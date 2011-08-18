@@ -20,6 +20,7 @@
 
 
 #include "fboUtils.h"
+#include "imageMix.h"
 
 #define MAX_X  100
 #define MIN_X -100
@@ -38,6 +39,8 @@ using namespace std;
 CMD2Model Ogro;
 CMD2Model Weapon;
 
+CImageMix mixer;
+
 bool b_record = true;
 bool b_fbo    = false;
 
@@ -52,6 +55,8 @@ int window_height;
 
 int ImNum = 0;
 int ImCounter = 0;
+
+std::string* ImName;
 
 GLuint colorTextureId, depthTextureId, fboId;
 
@@ -100,7 +105,7 @@ void clearFBO()
 
   // Release config
   cout << "Exiting..." << endl;
-  ReleaseConfig(u, uBuf, f, r, rBuf, t, tBuf);
+  ReleaseConfig(u, uBuf, f, r, rBuf, t, tBuf, ImName);
 }
 
 
@@ -299,11 +304,12 @@ void record()
 
 void Display( void )
 {
-  // Rendre to FBO
+  // Render to FBO
   bool temp_b_fbo = b_fbo;
   
   if (temp_b_fbo)
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboId);	
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboId);
+  
   
   // clear color and depth buffer
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -334,10 +340,6 @@ void Display( void )
 
   // Respond to left and right key strokes
   glRotatef( angle, 0.0, 1.0, 0.0 );
-
-  
-  // gluLookAt(cx, cy, cz, cx+px, cy+py, cz+pz, ux, uy, uz);
-
   
   // draw models
   Ogro.DrawModel( bAnimated ? timesec : 0.0 );
@@ -345,11 +347,17 @@ void Display( void )
 
   glPopMatrix();
 
-  record();
+  // record();
+
+  glWindowPos2i(300, 100); //glRasterPos2i(0, 0);
+  // glPixelZoom(1.0, 1.0);
+  
+  mixer.drawBackgrounds(0);
 
   // back to normal window-system-provided framebuffer
   if (temp_b_fbo)
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
   
   // swap buffers and redisplay the scene
   glutSwapBuffers();
@@ -515,11 +523,11 @@ int main( int argc, char *argv[] )
   
   std::string ConfigName = argv[ArgCount++];
 
-  
-
+ 
   ReadConfig(ConfigName, ImNum, scale, window_width, window_height,
-	     zNear, zFar, n, o, c, u, uBuf, f, r, rBuf, t, tBuf);
+	     zNear, zFar, n, o, c, u, uBuf, f, r, rBuf, t, tBuf, ImName);
 
+  mixer.loadBackgrounds(ImName, ImNum);
 
   // OutputDepthName = argv[ArgCount++];
   // OutputColorName = argv[ArgCount++];

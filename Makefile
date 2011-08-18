@@ -13,9 +13,11 @@ TEXU = texture.h texture.cpp
 CTGX = tga.h tga.cpp
 FBOU = fboUtils.h fboUtils.cpp
 GINF = glInfo.h glInfo.cpp
+CIMG = CImage.h CImage.cpp
+CMIX = imageMix.h imageMix.cpp
 
 
-OBJS =  bmp.o md2.o pcx.o texture.o tga.o glutmain.o fboUtils.o glInfo.o
+OBJS =  bmp.o md2.o pcx.o texture.o tga.o glutmain.o fboUtils.o glInfo.o CImage.o imageMix.o
 
 $(PROG) : $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $(PROG)
@@ -23,6 +25,11 @@ $(PROG) : $(OBJS)
 glutmain.o : glutmain.cpp
 	$(CC) $(CFLAGS) $^ 
 
+CImage.o : $(CIMG)
+	$(CC) $(CFLAGS) $^
+
+imageMix.o : $(CMIX)
+	$(CC) $(CFLAGS) $^
 
 bmp.o : $(CBMP)
 	$(CC) $(CFLAGS) $^

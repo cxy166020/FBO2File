@@ -8,6 +8,9 @@ zFar  = 10;
 window_width = 600;
 window_height = 340;
 
+ImDir = 'real_2_undistorted/';
+images = dir([ImDir '*_l_*.ppm']);
+
 pt = -[0*1.7 0*1.7 1.7]';
 
 CR = '\n';
@@ -83,6 +86,9 @@ for i = 1:NumOfIm
         plot3(pt_3d(1), pt_3d(2), pt_3d(3), 'ob');
     end
     
+    fprintf(fout, '%s', [ImDir images(i).name]);
+    fprintf(fout, CR);
+    
     % Up vector
     fprintf(fout, '%f ', up);
     fprintf(fout, CR);
@@ -98,6 +104,7 @@ for i = 1:NumOfIm
     % Translation
     fprintf(fout, '%f ', T);
     fprintf(fout, CR);
+    
     
     screen = K*[R T]*[pt_3d; 1];
     screen = screen/screen(end)

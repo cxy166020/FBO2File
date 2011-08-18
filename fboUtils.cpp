@@ -468,7 +468,8 @@ void ReadConfig( std::string ConfigName, int& ImNum, float& scale,
 		 float**& u, float*& uBuf,
 		 float*& f, 
 		 float**& r, float*& rBuf,
-		 float**& t, float*& tBuf)
+		 float**& t, float*& tBuf,
+		 std::string*& ImName )
 {
   std::ifstream ifm;
 
@@ -494,6 +495,7 @@ void ReadConfig( std::string ConfigName, int& ImNum, float& scale,
   r = Allocate2DArray<float>(ImNum, 9, rBuf);
   t = Allocate2DArray<float>(ImNum, 3, tBuf);
   f = new float[ImNum];
+  ImName = new std::string[ImNum];
 
   // Read terrain vector
   ifm >> n[0] >> n[1] >> n[2];
@@ -513,6 +515,11 @@ void ReadConfig( std::string ConfigName, int& ImNum, float& scale,
   // Start reading projective matrices
   for(int i=0; i<ImNum; i++)
     {
+      // Read image name
+      ifm >> ImName[i];
+      std::cout << "Image name                        : "
+		<< ImName[i] << std::endl;
+
       // Up vector
       ifm >> u[i][0] >> u[i][1] >> u[i][2]; 
       std::cout << "Up vector                         : " 
@@ -546,11 +553,13 @@ void ReadConfig( std::string ConfigName, int& ImNum, float& scale,
 void ReleaseConfig( float**& u, float*& uBuf,
 		    float*& f, 
 		    float**& r, float*& rBuf,
-		    float**& t, float*& tBuf )
+		    float**& t, float*& tBuf,
+		    std::string*& ImName )
 {
   Delete2DArray<float>(u, uBuf);
   Delete2DArray<float>(r, rBuf);
   Delete2DArray<float>(t, tBuf);
 
   delete[] f;
+  delete[] ImName;
 }
