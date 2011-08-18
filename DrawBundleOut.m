@@ -2,13 +2,13 @@ function DrawBundleOut
 
 fid = fopen('bundle.out');
 fout = fopen('fbo_config.ini', 'w+');
-scale = 3;
-zNear = 550;
-zFar  = 1200;
+scale = 0.005;
+zNear = 0.01;
+zFar  = 10;
 window_width = 600;
 window_height = 340;
 
-pt = -[0*650 0*650 650]';
+pt = -[0*1.7 0*1.7 1.7]';
 
 CR = '\n';
 
@@ -63,7 +63,7 @@ for i = 1:NumOfIm
     
     
     if i == 1
-        
+             
         % Terrain vector
         fprintf(fout, '%f ', up);
         fprintf(fout, CR);
@@ -78,6 +78,9 @@ for i = 1:NumOfIm
         fprintf(fout, '%f ', C);
         fprintf(fout, CR);
         
+        
+         % Draw 3D point
+        plot3(pt_3d(1), pt_3d(2), pt_3d(3), 'ob');
     end
     
     % Up vector
@@ -94,10 +97,10 @@ for i = 1:NumOfIm
     
     % Translation
     fprintf(fout, '%f ', T);
-    fprintf(fout, CR)
+    fprintf(fout, CR);
     
-%     screen = K*[R T]*[pt_3d; 1];
-%     screen = screen/screen(end)
+    screen = K*[R T]*[pt_3d; 1];
+    screen = screen/screen(end)
     
 end
 

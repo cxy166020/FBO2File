@@ -51,6 +51,7 @@ int window_width;
 int window_height;
 
 int ImNum = 0;
+int ImCounter = 0;
 
 GLuint colorTextureId, depthTextureId, fboId;
 
@@ -157,7 +158,7 @@ void matmul4x4_4x4(float a[16], float b[16], float c[16])
 void Model2World()
 {
   // Image counter
-  int i = 3;
+  int i = ImCounter;
 
   // Find the vector representations of model coordinate system
   // in the world coordinate system
@@ -439,6 +440,7 @@ void Init( int width, int height )
 }
 
 
+
 // --------------------------------------------------
 // Special() - keyboard input (special keys).
 // --------------------------------------------------
@@ -456,11 +458,21 @@ void Special( int key, int x, int y )
       break;
 
     case GLUT_KEY_UP:
-      g_angle -= 10.0;
+
+      if(ImCounter<ImNum-1)
+	ImCounter++;
+      else
+	ImCounter=0; 
+      
       break;
 
     case GLUT_KEY_DOWN:
-      g_angle += 10.0;
+      
+      if(ImCounter>0)
+	ImCounter--;
+      else
+	ImCounter=ImNum-1;
+
       break;
     }
 }
@@ -495,8 +507,6 @@ int main( int argc, char *argv[] )
   //     return 0;
   //   }
 
-  
-  
   int ArgCount = 1;
   
   std::string ConfigName = argv[ArgCount++];
