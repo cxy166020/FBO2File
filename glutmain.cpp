@@ -97,6 +97,10 @@ void clearFBO()
   glDeleteTextures(1, &depthTextureId);
 
   glDeleteFramebuffersEXT(1, &fboId);
+
+  // Release config
+  cout << "Exiting..." << endl;
+  ReleaseConfig(u, uBuf, f, r, rBuf, t, tBuf);
 }
 
 
@@ -550,9 +554,9 @@ int main( int argc, char *argv[] )
 
   glutMainLoop();
 
-  // Release config
-  cout << "Exiting..." << endl;
-  ReleaseConfig(u, uBuf, f, r, rBuf, t, tBuf);
+  // // Release config
+  // cout << "Exiting..." << endl;
+  // ReleaseConfig(u, uBuf, f, r, rBuf, t, tBuf);
 
   return 0;
 }
