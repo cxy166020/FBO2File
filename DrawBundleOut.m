@@ -1,17 +1,20 @@
 function DrawBundleOut
 
-fid = fopen('bundle.out');
-fout = fopen('fbo_config.ini', 'w+');
+fid = fopen('bundle_binocular.out');
+fout = fopen('fbo_binocular_config.ini', 'w+');
 scale = 0.005;
 zNear = 0.01;
 zFar  = 10;
 window_width = 600;
 window_height = 340;
 
-ImDir = 'real_2_undistorted/';
-images = dir([ImDir '*_l_*.ppm']);
+ImDir = 'real_2_binocular/';
+images = dir([ImDir '*.ppm']);
 
-pt = -[0*1.7 0*1.7 1.7]';
+depth = 1.3;
+pt = -[0, 0, 1]';
+
+pt = pt*depth;
 
 CR = '\n';
 
@@ -46,6 +49,12 @@ fprintf(fout, CR);
 fprintf(fout, '%d', window_height);
 fprintf(fout, CR);
 
+half = NumOfIm/2;
+
+C_array  = zeros(3, NumOfIm);
+baseline = zeros(1, half);
+
+
 for i = 1:NumOfIm
     
     K = GetK(fid);
@@ -55,6 +64,24 @@ for i = 1:NumOfIm
     % Draw camera
     C = -R\T;
     plot3(C(1), C(2), C(3), 'or');
+    
+    C_array(:, i) = C;
+    
+    if i > half
+        baseline(i-half) = sqrt(sum((C_array(:, i-half) - C).^2));
+%         disp(baseline(i-half));
+    end
+    
+    if i == NumOfIm
+        bl_mean = mean(baseline);
+        bl_median = median(baseline);
+        bl_std = std(baseline);
+        
+        disp(['average baseline: ' num2str(bl_mean)]);
+        disp(['baseline median : ' num2str(bl_median)]);
+        disp(['baseline std    : ' num2str(bl_std)]);
+    end
+    
     
     % Draw principal axis
     M = K*R;
@@ -76,8 +103,7 @@ for i = 1:NumOfIm
         fprintf(fout, '%f ', pt_3d);
         fprintf(fout, CR);
         
-        % Camera location of view 1
-        C = -R\T;
+        
         fprintf(fout, '%f ', C);
         fprintf(fout, CR);
         
@@ -106,8 +132,8 @@ for i = 1:NumOfIm
     fprintf(fout, CR);
     
     
-    screen = K*[R T]*[pt_3d; 1];
-    screen = screen/screen(end)
+%     screen = K*[R T]*[pt_3d; 1];
+%     screen = screen/screen(end);
     
 end
 
