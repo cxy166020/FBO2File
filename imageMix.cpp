@@ -38,6 +38,9 @@ void CImageMix::drawBackgrounds(int idx)
     return;
   
   // Draw to frame buffer
+  glDisable( GL_TEXTURE_2D );
+  glWindowPos2i(0, 0);
   glDrawPixels(background[idx].width, background[idx].height,
 	       GL_RGB, GL_UNSIGNED_BYTE, background[idx].ImageData);
+  glEnable( GL_TEXTURE_2D );
 }

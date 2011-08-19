@@ -1,4 +1,6 @@
+#ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
+#endif
 
 #ifdef __APPLE__
 #include <GLUT/glut.h>
@@ -349,10 +351,10 @@ void Display( void )
 
   // record();
 
-  glWindowPos2i(300, 100); //glRasterPos2i(0, 0);
+   //glRasterPos2i(0, 0);
   // glPixelZoom(1.0, 1.0);
   
-  mixer.drawBackgrounds(0);
+  mixer.drawBackgrounds(ImCounter);
 
   // back to normal window-system-provided framebuffer
   if (temp_b_fbo)
