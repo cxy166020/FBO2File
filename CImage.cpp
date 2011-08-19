@@ -138,3 +138,36 @@ void CImage::ReadPPM()
   ifm.read((char*)ImageData, DataSize);
   ifm.close();
 }
+
+void CImage::FlipPPM()
+{
+  // Allocate temporary storage
+  unsigned char* temp = new unsigned char[DataSize];
+
+  // Copy iamge data
+  memcpy(temp, ImageData, DataSize);
+
+  // Flip the image up size down
+  int counter = 0;
+
+
+  for(int i=0; i<height; i++)
+    {
+      for(int j=0; j<width; j++)
+	{
+	  ImageData[counter*DIMENSION] =
+	    temp[((height-1-i)*width + j)*DIMENSION]; 
+
+	  ImageData[counter*DIMENSION+1] =
+	    temp[((height-1-i)*width + j)*DIMENSION+1]; 
+
+	  ImageData[counter*DIMENSION+2] =
+	    temp[((height-1-i)*width + j)*DIMENSION+2]; 
+	    
+	    counter++;
+	}
+    }
+  
+
+  delete[] temp;
+}

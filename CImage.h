@@ -12,6 +12,7 @@
 
 #define DIMENSION 3
 
+#include <cstring>
 #include <fstream>
 #include <stdlib.h>
 #include <string>
@@ -40,6 +41,7 @@ class CImage
  public:
   void   ReadPPM();
   void   SetFileName(string ImageName);
+  void   FlipPPM();
 
  public:
   unsigned char* ImageData;
