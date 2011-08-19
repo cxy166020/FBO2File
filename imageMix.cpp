@@ -23,9 +23,12 @@ void CImageMix::loadBackgrounds(std::string* ImNames, int ImNum)
       background[i].SetFileName(ImNames[i]);
       background[i].ReadPPM();
 
+#ifdef VERBOSE__
       std::cout << ImNames[i] << " is loaded" << std::endl;
       std::cout << "width: " << background[i].width
 		<< "  height: " << background[i].height << std::endl;
+#endif
+      
 
       background[i].FlipPPM();
     }

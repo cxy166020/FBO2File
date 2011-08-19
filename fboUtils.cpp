@@ -486,9 +486,11 @@ void ReadConfig( std::string ConfigName, int& ImNum, float& scale,
   // Read number of images, sweeping distance, image name and scale
   ifm >> ImNum >> scale >> zNear >> zFar >> window_width >> window_height;
 
+#ifdef VERBOSE__
   std::cout << "Number of input images in sequence: " << ImNum  << std::endl;
   std::cout << "Image width                       : " << window_width << std::endl;
   std::cout << "Image height                      : " << window_height << std::endl;
+#endif
 
   // Allocate memory for t, o, c, r
   u = Allocate2DArray<float>(ImNum, 3, uBuf);
@@ -499,52 +501,69 @@ void ReadConfig( std::string ConfigName, int& ImNum, float& scale,
 
   // Read terrain vector
   ifm >> n[0] >> n[1] >> n[2];
+#ifdef VERBOSE__
   std::cout << "Terrain vector                    : " 
 	    << n[0] << " " << n[1] << " " << n[2] << std::endl; 
+#endif
 
   // Read AR object coordinates
   ifm >> o[0] >> o[1] >> o[2];
+#ifdef VERBOSE__
   std::cout << "Location of AR object             : " 
 	    << o[0] << " " << o[1] << " " << o[2] << std::endl;
+#endif
 
   // Read the coordinate of camera center of view 1
   ifm >> c[0] >> c[1] >> c[2];
+#ifdef VERBOSE__
   std::cout << "Camera center of view 1           : " 
 	    << c[0] << " " << c[1] << " " << c[1] << std::endl;
+#endif
 
   // Start reading projective matrices
   for(int i=0; i<ImNum; i++)
     {
       // Read image name
       ifm >> ImName[i];
+#ifdef VERBOSE__
       std::cout << "Image name                        : "
 		<< ImName[i] << std::endl;
+#endif
 
       // Up vector
       ifm >> u[i][0] >> u[i][1] >> u[i][2]; 
+#ifdef VERBOSE__
       std::cout << "Up vector                         : " 
 		<< u[i][0] << " " << u[i][1] << " " << u[i][2] << std::endl;
+#endif
 
       // Focal length
       ifm >> f[i];
+#ifdef VERBOSE__
       std::cout << "Focal length                      : "
 		<< f[i] << std::endl;
 
       std::cout << "Rotation                          : ";
+#endif
 
       // Rotation
       for(int j=0; j<9; j++)
 	{
 	  ifm >> r[i][j];
+#ifdef VERBOSE__
 	  std::cout << r[i][j] << " ";
+#endif
 	}
-
+#ifdef VERBOSE__
       std::cout << std::endl;
+#endif
 
       // Translation
       ifm >> t[i][0] >> t[i][1] >> t[i][2];
+#ifdef VERBOSE__
       std::cout << "Translation                       : " 
 		<< t[i][0] << " " << t[i][1] << " " << t[i][2] << std::endl;
+#endif
     }
 
   ifm.close();

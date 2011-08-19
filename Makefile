@@ -22,6 +22,9 @@ OBJS =  bmp.o md2.o pcx.o texture.o tga.o glutmain.o fboUtils.o glInfo.o CImage.
 $(PROG) : $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $(PROG)
 
+verbose: CC += -DVERBOSE__
+verbose: $(PROG)
+
 glutmain.o : glutmain.cpp
 	$(CC) $(CFLAGS) $^ 
 
