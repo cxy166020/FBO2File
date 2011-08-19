@@ -272,8 +272,8 @@ void Model2World()
 
 void record()
 {
-  if(!b_record)
-    return;
+  // if(!b_record)
+  //   return;
 
   const int ColorChannel = 3;
 
@@ -283,6 +283,8 @@ void record()
   // glBindTexture(GL_TEXTURE_2D, depthTextureId);
   glReadPixels(0, 0, window_width, window_height, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, depth);
   glReadPixels(0, 0, window_width, window_height, GL_RGB,             GL_UNSIGNED_BYTE, color);
+
+  mixer.mixBuffers(depth, color, ImCounter);
   // glBindTexture(GL_TEXTURE_2D, 0);
 
   // ofstream ofm;
@@ -297,7 +299,7 @@ void record()
   delete[] depth;
   delete[] color;
 
-  b_record = false;
+  // b_record = false;
 }
 
 // --------------------------------------------------
@@ -349,12 +351,12 @@ void Display( void )
 
   glPopMatrix();
 
-  // record();
+  record();
 
    //glRasterPos2i(0, 0);
   // glPixelZoom(1.0, 1.0);
   
-  mixer.drawBackgrounds(ImCounter);
+  // mixer.drawBackgrounds(ImCounter);
 
   // back to normal window-system-provided framebuffer
   if (temp_b_fbo)

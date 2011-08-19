@@ -25,10 +25,13 @@ class CImageMix
 
   void loadBackgrounds(std::string* ImNames, int ImNum);
   void drawBackgrounds(int idx);
+  void  mixBuffers(unsigned char* renderedDepth,
+		   unsigned char* renderedColor,
+		   int idx);
 
 private:
   CImage* background;
-
+  int width, height;
 };
 
 #endif
