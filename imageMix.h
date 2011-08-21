@@ -14,6 +14,7 @@
 
 #include <iostream>
 #include <string>
+#include <fstream>
 
 #include "CImage.h"
 

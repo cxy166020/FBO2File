@@ -82,10 +82,12 @@ void CImageMix::drawBackgrounds(int idx)
 
 void CImageMix::mixBuffers(unsigned char* renderedDepth,
 			   unsigned char* renderedColor,
-			   int idx, float zFar, float zNear)
+			   int idx, float zNear, float zFar)
 {
   const int colorChannel = 3;
   const int maxDepth = 255;
+
+  static int record;
 
   unsigned char* mixed = new unsigned char[width*height*colorChannel];
   
@@ -96,6 +98,7 @@ void CImageMix::mixBuffers(unsigned char* renderedDepth,
   float coefB = zFar-zNear;
   float coefC = zFar+zNear;
   // depth = coefA./((coefC/(2*coefB))-depth+0.5);
+
 
   int offset = width*height*idx;
 
@@ -111,18 +114,19 @@ void CImageMix::mixBuffers(unsigned char* renderedDepth,
 	      mixed[colorCounter+1] = 
 		background[idx].ImageData[colorCounter+1];
 	      mixed[colorCounter+2] = 
-		background[idx].ImageData[colorCounter+2];
+		background[idx].ImageData[colorCounter+2]; 
 	    }
 	  else
 	    {
 	      // render depth buffer to range [0 1]
-	      float depth_f = renderedDepth[counter]/maxDepth;
+	      float rendered_depth_f = (float)renderedDepth[counter]/maxDepth;	      
+
 	      // non_linear transformation for depth buffer
-	      depth_f = coefA/((coefC/(2*coefB))-depth_f+0.5);
+	      rendered_depth_f = coefA/((coefC/(2*coefB))-rendered_depth_f+0.5);
 
 	      float stereo_depth_f = stereoDepth[offset+counter];
 	      
-	      if(stereo_depth_f <= depth_f)
+	      if(stereo_depth_f > rendered_depth_f)
 		{
 		  mixed[colorCounter] = 
 		    renderedColor[colorCounter];
@@ -138,7 +142,7 @@ void CImageMix::mixBuffers(unsigned char* renderedDepth,
 		  mixed[colorCounter+1] = 
 		    background[idx].ImageData[colorCounter+1];
 		  mixed[colorCounter+2] = 
-		    background[idx].ImageData[colorCounter+2];
+		    background[idx].ImageData[colorCounter+2]; 
 		}
 	    }
 	  

@@ -488,6 +488,9 @@ void ReadConfig( std::string ConfigName, int& ImNum, float& scale,
   ifm >> ImNum >> scale >> zNear >> zFar >> window_width >> window_height;
 
 #ifdef VERBOSE__
+  std::cout << "Model scale is                    : " << scale << std::endl;
+  std::cout << "zNear is                          : " << zNear << std::endl;
+  std::cout << "zFar is                           : " << zFar << std::endl;
   std::cout << "Number of input images in sequence: " << ImNum  << std::endl;
   std::cout << "Image width                       : " << window_width << std::endl;
   std::cout << "Image height                      : " << window_height << std::endl;

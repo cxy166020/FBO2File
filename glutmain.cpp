@@ -273,34 +273,32 @@ void Model2World()
 
 void record()
 {
-  // if(!b_record)
-  //   return;
-
   const int ColorChannel = 3;
 
   unsigned char* depth = new unsigned char[window_width*window_height];
   unsigned char* color = new unsigned char[window_width*window_height*ColorChannel];
 
-  // glBindTexture(GL_TEXTURE_2D, depthTextureId);
   glReadPixels(0, 0, window_width, window_height, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, depth);
   glReadPixels(0, 0, window_width, window_height, GL_RGB,             GL_UNSIGNED_BYTE, color);
 
   mixer.mixBuffers(depth, color, ImCounter, zNear, zFar);
-  // glBindTexture(GL_TEXTURE_2D, 0);
 
-  // ofstream ofm;
-  // ofm.open(OutputDepthName.c_str(), ios::binary | ios::trunc);
-  // ofm.write((char*)depth, window_width*window_height);
-  // ofm.close();
+  // if(b_record)
+  //   {
+  //     ofstream ofm;
+  //     ofm.open("rendered_depth.dat", ios::binary | ios::trunc);
+  //     ofm.write((char*)depth, window_width*window_height);
+  //     ofm.close();
 
-  // ofm.open(OutputColorName.c_str(), ios::binary | ios::trunc);
-  // ofm.write((char*)color, window_width*window_height*ColorChannel);
-  // ofm.close();
+  //     ofm.open("rendered_color.dat", ios::binary | ios::trunc);
+  //     ofm.write((char*)color, window_width*window_height*ColorChannel);
+  //     ofm.close();
+  //   }
 
   delete[] depth;
   delete[] color;
 
-  // b_record = false;
+  b_record = false;
 }
 
 // --------------------------------------------------

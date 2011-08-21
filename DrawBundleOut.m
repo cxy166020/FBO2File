@@ -3,8 +3,10 @@ function DrawBundleOut
 fid = fopen('bundle_binocular.out');
 fout = fopen('fbo_binocular_config.ini', 'w+');
 scale = 0.005;
-zNear = 0.01;
-zFar  = 10;
+
+zNear = 1.0;
+zFar  = 5;
+
 window_width = 600;
 window_height = 340;
 
@@ -12,8 +14,8 @@ ImDir = 'real_2_binocular/';
 images = dir([ImDir '*.ppm']);
 DepthMap = dir([ImDir '*.dat']);
 
-depth = 1.3;
-pt = -[88, -88, 1]';
+depth = 1.2;
+pt = -[0, 0, 1]';
 
 pt = pt*depth;
 
@@ -108,6 +110,7 @@ for i = 1:NumOfIm
         fprintf(fout, '%f ', C);
         fprintf(fout, CR);
         
+%         result = K*[R T]*[pt_3d; 1]
         
          % Draw 3D point
         plot3(pt_3d(1), pt_3d(2), pt_3d(3), 'ob');
