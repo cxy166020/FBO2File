@@ -14,7 +14,7 @@ ImDir = 'real_2_binocular/';
 images = dir([ImDir '*.ppm']);
 DepthMap = dir([ImDir '*.dat']);
 
-depth = 1.2;
+depth = 1.35;
 pt = -[0, 0, 1]';
 
 pt = pt*depth;
@@ -98,7 +98,8 @@ for i = 1:NumOfIm
     if i == 1
              
         % Terrain vector
-        fprintf(fout, '%f ', up);
+        n = R\[0 0.7 0.7]';
+        fprintf(fout, '%f ', n);
         fprintf(fout, CR);
         
         % 3D point location
