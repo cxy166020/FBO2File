@@ -494,10 +494,64 @@ void Special( int key, int x, int y )
 
 void Keyboard(unsigned char key, int x, int y)
 {
-  if( key == ' ' )
-    b_fbo = !b_fbo;
-  else if( key != 'd' )
-    b_record = true;
+  // if( key == ' ' )
+  //   b_fbo = !b_fbo;
+  // else if( key != 'd' )
+  //   b_record = true;
+
+  float xWorld[3], yWorld[3], zWorld[3];
+
+  yWorld[0] = n[0]; yWorld[1] = n[1]; yWorld[2] = n[2];
+  zWorld[0] = c[0]-o[0]; zWorld[1] = c[1]-o[1]; zWorld[2] = c[2]-o[2];
+
+  cross(yWorld, zWorld, xWorld);
+  cross(xWorld, yWorld, zWorld);
+
+  CTimer::GetInstance()->Update();
+  long CurrentTime = (long)CTimer::GetInstance()->GetTimeMSec();
+	
+  switch( key )
+    {
+    case 27:
+      {
+	CTimer::FreeInstance();
+	CTextureManager::FreeInstance();
+
+	exit(0);
+	break;
+      }
+
+    case 'W':
+    case 'w':
+      {
+	Ogro.UserControlled(0, 0, 1, 0, 0, 0, CurrentTime, o, zWorld);
+	Weapon.UserControlled(0, 0, 1, 0, 0, 0, CurrentTime, o, zWorld);
+	break;
+      }
+
+    case 'S':
+    case 's':
+      {
+	Ogro.UserControlled(0, 0, 0, 1, 0, 0, CurrentTime, o, zWorld);
+	Weapon.UserControlled(0, 0, 0, 1, 0, 0, CurrentTime, o, zWorld);			      
+	break;
+      }
+
+    case 'A':
+    case 'a':
+      {
+	Ogro.UserControlled(1, 0, 0, 0, 0, 0, CurrentTime, o, zWorld);
+	Weapon.UserControlled(1, 0, 0, 0, 0, 0, CurrentTime, o, zWorld);
+	break;
+      }
+    case 'D':
+    case 'd':
+      {
+	Ogro.UserControlled(0, 1, 0, 0, 0, 0, CurrentTime, o, zWorld);
+	Weapon.UserControlled(0, 1, 0, 0, 0, 0, CurrentTime, o, zWorld);
+	break;
+      }
+    }
 }
 
 void Idle()

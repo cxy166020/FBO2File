@@ -5,8 +5,8 @@
 //
 
 
-#ifndef		__MD2_H
-#define		__MD2_H
+#ifndef __MD2_H
+#define __MD2_H
 
 
 
@@ -163,30 +163,34 @@ class CMD2Model
 
 
   // functions
-  bool	LoadModel( const char *filename );
-  bool	LoadSkin( const char *filename );
+  bool LoadModel( const char *filename );
+  bool LoadSkin( const char *filename );
 
-  void	DrawModel( float time );
-  void	DrawFrame( int frame );
+  void DrawModel( float time );
+  void DrawFrame( int frame );
 
-  void	SetAnim( int type );
-  void	ScaleModel( float s ) { m_scale = s; }
+  void SetAnim( int type );
+  void ScaleModel( float s ) { m_scale = s; }
 	
-  void    Automatic(float xUser, float yUser, float zUser);
+  void Automatic(float xUser, float yUser, float zUser);
 	
-  void    UserControlled(float xMax, float xMin, float yMax, float yMin,
-			 float zMax, float zMin, int left, int right,
-			 int up, int down, int action, int idle, long CurrTime);
+  void UserControlled(float xMax, float xMin, float yMax, float yMin,
+		      float zMax, float zMin, int left, int right,
+		      int up, int down, int action, int idle, long CurrTime);
+
+  void UserControlled(int left, int right, int up, int down,
+		      int action, int idle, long CurrTime,
+		      float o[3], float forward[3]);
 	
-  void    SetPosition(float x, float y, float z) { xPos = x; yPos = y; zPos = z; }
+  void SetPosition(float x, float y, float z) { xPos = x; yPos = y; zPos = z; }
 	
-  float   GetX() { return xPos; }
+  float GetX() { return xPos; }
 	
-  float   GetY() { return yPos; }
+  float GetY() { return yPos; }
 	
-  float   GetZ() { return zPos; }
+  float GetZ() { return zPos; }
 	
-  void    SetHP() { hp -= 10; } 
+  void SetHP() { hp -= 10; } 
 
  private:
   void	Animate( float time );

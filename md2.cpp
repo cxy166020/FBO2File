@@ -608,3 +608,62 @@ void CMD2Model::UserControlled(float xMax, float xMin, float yMax, float yMin,
   else if(zPos <= zMin && zVel > 0)
     zPos += zVel*m_anim.interpol;
 }
+
+
+void CMD2Model::UserControlled(int left, int right, int up, int down,
+			       int action, int idle, long CurrTime,
+			       float o[3], float forward[3])
+{
+  if(action)
+    {
+      if(m_anim.type != ATTACK)
+	SetAnim(ATTACK);
+		
+      time = CurrTime;
+    }
+  else if(up || down)
+    {
+      if(m_anim.type != RUN)
+	SetAnim(RUN);
+		
+      time = CurrTime;
+    }
+  else if(idle)
+    {
+      if(CurrTime-time>IdleTime) 
+	{
+	  if(m_anim.type != STAND)
+	    SetAnim(STAND);
+			
+	  time = CurrTime;
+	}
+    }
+
+  if(up)
+    {
+      // Update Current Position
+      o[0] += forward[0]*0.01;
+      o[1] += forward[1]*0.01;
+      o[2] += forward[2]*0.01;
+    }
+  else if(down)
+    {
+      // Update Current Position
+      o[0] -= forward[0]*0.01;
+      o[1] -= forward[1]*0.01;
+      o[2] -= forward[2]*0.01;
+    }
+	
+	
+  // Update current angle
+  if(left)
+    zRotate+=30;
+  else if(right)
+    zRotate-=30;
+	
+	
+ 
+  // xPos += xVel*m_anim.interpol;
+  // yPos += yVel*m_anim.interpol;
+  // zPos += zVel*m_anim.interpol;
+}
