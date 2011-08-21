@@ -10,9 +10,10 @@ window_height = 340;
 
 ImDir = 'real_2_binocular/';
 images = dir([ImDir '*.ppm']);
+DepthMap = dir([ImDir '*.dat']);
 
 depth = 1.3;
-pt = -[0, 0, 1]';
+pt = -[88, -88, 1]';
 
 pt = pt*depth;
 
@@ -113,6 +114,9 @@ for i = 1:NumOfIm
     end
     
     fprintf(fout, '%s', [ImDir images(i).name]);
+    fprintf(fout, CR);
+    
+    fprintf(fout, '%s', [ImDir DepthMap(i).name]);
     fprintf(fout, CR);
     
     % Up vector

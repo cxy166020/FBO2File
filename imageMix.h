@@ -24,13 +24,15 @@ class CImageMix
   ~CImageMix();
 
   void loadBackgrounds(std::string* ImNames, int ImNum);
+  void loadDepthmaps(std::string* DepthNames, int ImNum);
   void drawBackgrounds(int idx);
-  void  mixBuffers(unsigned char* renderedDepth,
-		   unsigned char* renderedColor,
-		   int idx);
+  void mixBuffers(unsigned char* renderedDepth,
+		  unsigned char* renderedColor,
+		  int idx, float zNear, float zFar);
 
 private:
   CImage* background;
+  float* stereoDepth;
   int width, height;
 };
 

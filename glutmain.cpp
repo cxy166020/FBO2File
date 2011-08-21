@@ -59,6 +59,7 @@ int ImNum = 0;
 int ImCounter = 0;
 
 std::string* ImName;
+std::string* DepthName;
 
 GLuint colorTextureId, depthTextureId, fboId;
 
@@ -107,7 +108,7 @@ void clearFBO()
 
   // Release config
   cout << "Exiting..." << endl;
-  ReleaseConfig(u, uBuf, f, r, rBuf, t, tBuf, ImName);
+  ReleaseConfig(u, uBuf, f, r, rBuf, t, tBuf, ImName, DepthName);
 }
 
 
@@ -284,7 +285,7 @@ void record()
   glReadPixels(0, 0, window_width, window_height, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, depth);
   glReadPixels(0, 0, window_width, window_height, GL_RGB,             GL_UNSIGNED_BYTE, color);
 
-  mixer.mixBuffers(depth, color, ImCounter);
+  mixer.mixBuffers(depth, color, ImCounter, zNear, zFar);
   // glBindTexture(GL_TEXTURE_2D, 0);
 
   // ofstream ofm;
@@ -529,9 +530,11 @@ int main( int argc, char *argv[] )
 
  
   ReadConfig(ConfigName, ImNum, scale, window_width, window_height,
-	     zNear, zFar, n, o, c, u, uBuf, f, r, rBuf, t, tBuf, ImName);
+	     zNear, zFar, n, o, c, u, uBuf, f, r, rBuf, t, tBuf, 
+	     ImName, DepthName);
 
   mixer.loadBackgrounds(ImName, ImNum);
+  mixer.loadDepthmaps(DepthName, ImNum);
 
   // OutputDepthName = argv[ArgCount++];
   // OutputColorName = argv[ArgCount++];

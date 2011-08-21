@@ -469,7 +469,8 @@ void ReadConfig( std::string ConfigName, int& ImNum, float& scale,
 		 float*& f, 
 		 float**& r, float*& rBuf,
 		 float**& t, float*& tBuf,
-		 std::string*& ImName )
+		 std::string*& ImName,
+		 std::string*& DepthName )
 {
   std::ifstream ifm;
 
@@ -498,6 +499,7 @@ void ReadConfig( std::string ConfigName, int& ImNum, float& scale,
   t = Allocate2DArray<float>(ImNum, 3, tBuf);
   f = new float[ImNum];
   ImName = new std::string[ImNum];
+  DepthName = new std::string[ImNum];
 
   // Read terrain vector
   ifm >> n[0] >> n[1] >> n[2];
@@ -529,6 +531,9 @@ void ReadConfig( std::string ConfigName, int& ImNum, float& scale,
       std::cout << "Image name                        : "
 		<< ImName[i] << std::endl;
 #endif
+
+      // Read depth name
+      ifm >> DepthName[i];
 
       // Up vector
       ifm >> u[i][0] >> u[i][1] >> u[i][2]; 
@@ -573,7 +578,8 @@ void ReleaseConfig( float**& u, float*& uBuf,
 		    float*& f, 
 		    float**& r, float*& rBuf,
 		    float**& t, float*& tBuf,
-		    std::string*& ImName )
+		    std::string*& ImName,
+		    std::string*& DepthName )
 {
   Delete2DArray<float>(u, uBuf);
   Delete2DArray<float>(r, rBuf);
@@ -581,4 +587,5 @@ void ReleaseConfig( float**& u, float*& uBuf,
 
   delete[] f;
   delete[] ImName;
+  delete[] DepthName;
 }

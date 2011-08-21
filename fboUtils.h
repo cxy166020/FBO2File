@@ -108,13 +108,15 @@ void ReadConfig( std::string ConfigName, int& ImNum, float& scale,
 		 float*& f, 
 		 float**& r, float*& rBuf,
 		 float**& t, float*& tBuf,
-		 std::string*& ImName );
+		 std::string*& ImName,
+		 std::string*& DepthName );
 
 
 void ReleaseConfig( float**& u, float*& uBuf,
 		    float*& f, 
 		    float**& r, float*& rBuf,
 		    float**& t, float*& tBuf,
-		    std::string*& ImName );
+		    std::string*& ImName,
+		    std::string*& DepthName );
 
 #endif
