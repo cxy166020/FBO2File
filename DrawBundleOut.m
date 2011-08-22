@@ -14,7 +14,7 @@ ImDir = 'real_2_binocular/';
 images = dir([ImDir '*.ppm']);
 DepthMap = dir([ImDir '*.dat']);
 
-depth = 1.35;
+depth = 1.25;
 pt = -[0, 0, 1]';
 
 pt = pt*depth;
